@@ -12,6 +12,8 @@ const AlphaWellPlatform = () => {
     leaseArea: 'West Texas Basin',
     predictionHorizon: 15
   });
+    
+    
 
   const [economicData, setEconomicData] = useState({
     gasShrinkage: 91,
