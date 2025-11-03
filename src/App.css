@@ -1,1 +1,20 @@
 @import "tailwindcss";
+
+/* While exporting to PDF, simplify visuals that html2canvas can't parse */
+.pdf-exporting .bg-gradient-to-r,
+.pdf-exporting .bg-gradient-to-l,
+.pdf-exporting .bg-gradient-to-t,
+.pdf-exporting .bg-gradient-to-b,
+.pdf-exporting .bg-gradient-to-tr,
+.pdf-exporting .bg-gradient-to-tl,
+.pdf-exporting .bg-gradient-to-br,
+.pdf-exporting .bg-gradient-to-bl {
+  background-image: none !important;
+}
+
+.pdf-exporting .animate-blob,
+.pdf-exporting .mix-blend-multiply,
+.pdf-exporting .blur-3xl,
+.pdf-exporting .blur-2xl {
+  display: none !important;
+}

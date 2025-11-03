@@ -49,7 +49,17 @@ export default function AlphaWellPlatform() {
             </button>
 
             <button
-              onClick={() => setActiveTab("input")}
+              onClick={() => {
+                if (activeTab !== "executive") {
+                  // go to Executive tab, then fire event shortly after so the component is mounted
+                  setActiveTab("executive");
+                  setTimeout(() => {
+                    window.dispatchEvent(new CustomEvent("aw-export-exec-pdf"));
+                  }, 250);
+                } else {
+                  window.dispatchEvent(new CustomEvent("aw-export-exec-pdf"));
+                }
+              }}
               className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium text-blue-700 bg-blue-100 hover:bg-blue-200 transition-all"
             >
               <FileText className="w-4 h-4" />

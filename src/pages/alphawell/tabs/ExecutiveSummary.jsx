@@ -1,5 +1,5 @@
 // pages/alphawell/tabs/ExecutiveSummary.jsx
-import React, { useMemo } from "react";
+import React, { useMemo, useEffect, useState } from "react";
 import {
   Activity,
   DollarSign,
@@ -25,7 +25,8 @@ import {
   Legend,
 } from "recharts";
 import { useAlphaWell } from "../../../context/AlphaWellContext";
-
+import { exportElementToPDF } from "../../../utils/ExportPdf";
+import ExecParamsModal from "./ExecParamsModal";
 export default function ExecutiveSummary() {
   const {
     kpis,
@@ -35,7 +36,7 @@ export default function ExecutiveSummary() {
     economicParams,
     wellParams,
   } = useAlphaWell();
-
+  const [openEdit, setOpenEdit] = useState(false);
   // Defensive guards
   const hasData =
     kpis &&
@@ -57,6 +58,24 @@ export default function ExecutiveSummary() {
     ];
   }, [hasData, carbonData]);
 
+  // Listen to header trigger
+  useEffect(() => {
+    const handler = async () => {
+      try {
+        await exportElementToPDF(
+          "exec-summary",
+          `AlphaWell_ExecutiveSummary_${wellParams.wellId || "Well"}.pdf`
+        );
+      } catch (e) {
+        const msg = e?.message || "Unknown error";
+        console.error("PDF export failed:", e);
+        alert(`Sorry, we couldn’t generate the PDF.\n\n${msg}`);
+      }
+    };
+    window.addEventListener("aw-export-exec-pdf", handler);
+    return () => window.removeEventListener("aw-export-exec-pdf", handler);
+  }, [wellParams.wellId]);
+
   if (!hasData) {
     return (
       <div className="bg-white rounded-xl p-8 shadow">
@@ -69,7 +88,7 @@ export default function ExecutiveSummary() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6" id="exec-summary">
       {/* Verdict Banner */}
       <div
         className={`rounded-xl p-6 ${
@@ -94,6 +113,22 @@ export default function ExecutiveSummary() {
               <AlertTriangle className="w-16 h-16" />
             )}
           </div>
+        </div>
+        <div className="mt-4 flex flex-wrap gap-3">
+          <button
+            onClick={() =>
+              window.dispatchEvent(new CustomEvent("aw-export-exec-pdf"))
+            }
+            className="px-4 py-2 rounded-lg bg-white/15 hover:bg-white/25 text-white font-medium"
+          >
+            Generate PDF
+          </button>
+          <button
+            onClick={() => setOpenEdit(true)}
+            className="px-4 py-2 rounded-lg bg-white text-gray-900 font-semibold hover:bg-gray-100"
+          >
+            Edit your parameters
+          </button>
         </div>
       </div>
 
@@ -305,7 +340,9 @@ export default function ExecutiveSummary() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div>
             <p className="text-sm text-gray-600">Formation</p>
-            <p className="font-semibold text-gray-900">{wellParams.formation}</p>
+            <p className="font-semibold text-gray-900">
+              {wellParams.formation}
+            </p>
           </div>
           <div>
             <p className="text-sm text-gray-600">Trajectory</p>
@@ -351,6 +388,7 @@ export default function ExecutiveSummary() {
           </div>
         </div>
       </div>
+      <ExecParamsModal open={openEdit} onClose={() => setOpenEdit(false)} />
     </div>
   );
 }
