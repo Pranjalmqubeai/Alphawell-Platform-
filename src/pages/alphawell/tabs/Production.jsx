@@ -19,6 +19,7 @@ export default function Production() {
           <NumberTile title="Total Water Production" value={`${(productionData[productionData.length - 1].cumulativeWater / 1000).toFixed(0)}K bbl`} sub={`Over ${wellParams.predictionHorizon} years`} color="bg-blue-50" t="text-blue-800" v="text-blue-900" />
         </div>
 
+        
         <ResponsiveContainer width="100%" height={400}>
           <LineChart data={productionData.filter((_, i) => i % 2 === 0)}>
             <CartesianGrid strokeDasharray="3 3" />
