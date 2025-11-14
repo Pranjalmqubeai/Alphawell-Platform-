@@ -115,14 +115,14 @@ export default function ExecutiveSummary() {
           </div>
         </div>
         <div className="mt-4 flex flex-wrap gap-3">
-          <button
+          {/* <button
             onClick={() =>
               window.dispatchEvent(new CustomEvent("aw-export-exec-pdf"))
             }
             className="px-4 py-2 rounded-lg bg-white/15 hover:bg-white/25 text-white font-medium"
           >
             Generate PDF
-          </button>
+          </button> */}
           <button
             onClick={() => setOpenEdit(true)}
             className="px-4 py-2 rounded-lg bg-white text-gray-900 font-semibold hover:bg-gray-100"

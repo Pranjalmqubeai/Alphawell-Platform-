@@ -1,11 +1,26 @@
-import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Activity, LogOut } from 'lucide-react';
 import { useAlphaWell } from '../../context/AlphaWellContext';
 
 export default function Navbar() {
   const { isAuthenticated, currentUser, logout } = useAlphaWell();
   const { pathname } = useLocation();
+  const navigate = useNavigate();
+  const [isSigningOut, setIsSigningOut] = useState(false);
+
+  const handleSignOut = async () => {
+    if (isSigningOut) return;
+    setIsSigningOut(true);
+    try {
+      await logout();            // calls your API + clears tokens (from context)
+      navigate('/login');        // send them to login after successful logout
+    } finally {
+      setIsSigningOut(false);
+    }
+  };
+
+  const firstName = currentUser?.name?.split(' ')?.[0] || 'User';
 
   return (
     <header className="bg-white border-b border-gray-200">
@@ -22,6 +37,7 @@ export default function Navbar() {
           >
             Home
           </Link>
+
           {isAuthenticated && (
             <Link
               to="/app"
@@ -30,6 +46,7 @@ export default function Navbar() {
               App
             </Link>
           )}
+
           {!isAuthenticated ? (
             <>
               <Link to="/login" className="px-3 py-2 text-gray-600 hover:bg-gray-100 rounded-lg">Login</Link>
@@ -37,11 +54,14 @@ export default function Navbar() {
             </>
           ) : (
             <button
-              onClick={logout}
-              className="flex items-center space-x-2 px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg"
+              onClick={handleSignOut}
+              disabled={isSigningOut}
+              className="flex items-center space-x-2 px-3 py-2 text-gray-700 hover:bg-gray-100 rounded-lg cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+              aria-label="Sign out"
+              title="Sign out"
             >
-              <LogOut className="w-4 h-4" />
-              <span>Sign Out ({currentUser?.name?.split(' ')[0]})</span>
+              <LogOut className={`w-4 h-4 ${isSigningOut ? 'animate-pulse' : ''}`} />
+              <span>{isSigningOut ? 'Signing out…' : `Sign Out (${firstName})`}</span>
             </button>
           )}
         </nav>

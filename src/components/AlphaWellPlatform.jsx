@@ -178,50 +178,51 @@ const AlphaWellPlatform = () => {
   const [showHistorical, setShowHistorical] = useState(false);
   
   // Input parameters
-  const [wellParams, setWellParams] = useState({
-    wellId: 'AW-2024-457',
-    latitude: 31.8467,
-    longitude: -102.3689,
-    formation: 'Wolfcamp A',
-    stateWellType: 'Horizontal',
-    trajectory: 'Horizontal',
-    tvd: 8450,
-    md: 16250,
-    lateralLength: 7500,
-    elevationKB: 2847,
-    predictionHorizon: 15
-  });
-  
-  const [economicParams, setEconomicParams] = useState({
-    totalCAPEX: 8500000,
-    drillingExpense: 4200000,
-    completionExpense: 4300000,
-    fixedOPEX: 120000,
-    oilOPEX: 8.50,
-    gasOPEX: 0.45,
-    waterOPEX: 2.10,
-    oilWI: 0.75,
-    gasWI: 0.75,
-    waterWI: 0.75,
-    oilNRI: 0.6375,
-    gasNRI: 0.6375,
-    discountRate: 0.10,
-    oilPrice: 75,
-    gasPrice: 3.25,
-    oilDiff: 0.02,
-    gasMult: 0.95,
-    adValorem: 0.015,
-    oilSeverance: 0.046,
-    gasSeverance: 0.075
-  });
-  
-  const [carbonParams, setCarbonParams] = useState({
-    processingIntensity: 1.0,
-    flarePercent: 0.02,
-    carbonPrice: 50,
-    enableCarbonCredits: false
-  });
-  
+ // --- Preset A: Midland Basin – Wolfcamp B (longer lateral) [ACTIVE] ---
+const [wellParams, setWellParams] = useState({
+  wellId: 'AW-2025-901',
+  latitude: 31.70,
+  longitude: -102.00,
+  formation: 'Wolfcamp B',
+  stateWellType: 'Horizontal',
+  trajectory: 'Horizontal',
+  tvd: 9500,
+  md: 18500,
+  lateralLength: 10000,
+  elevationKB: 3005,
+  predictionHorizon: 20, // years
+});
+
+const [economicParams, setEconomicParams] = useState({
+  totalCAPEX: 10200000,
+  drillingExpense: 5100000,
+  completionExpense: 5100000,
+  fixedOPEX: 150000,
+  oilOPEX: 7.90,
+  gasOPEX: 0.38,
+  waterOPEX: 1.90,
+  oilWI: 0.80,
+  gasWI: 0.80,
+  waterWI: 0.80,
+  oilNRI: 0.6250,
+  gasNRI: 0.6250,
+  discountRate: 0.12,
+  oilPrice: 78,
+  gasPrice: 2.85,
+  oilDiff: 0.03,
+  gasMult: 0.92,
+  adValorem: 0.018,
+  oilSeverance: 0.046,
+  gasSeverance: 0.075,
+});
+
+const [carbonParams, setCarbonParams] = useState({
+  processingIntensity: 0.95,
+  flarePercent: 0.015,
+  carbonPrice: 45,
+  enableCarbonCredits: false,
+});
+
   const [productionData, setProductionData] = useState([]);
   const [economicData, setEconomicData] = useState([]);
   const [carbonData, setCarbonData] = useState([]);

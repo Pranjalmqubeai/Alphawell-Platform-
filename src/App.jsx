@@ -3,12 +3,13 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Navbar from './components/layout/Navbar';
 import Footer from './components/layout/Footer';
 import Homepage from './pages/Homepage';
-
 import AlphaWellPlatform from './pages/alphawell/AlphawellPlatform';
 import { AlphaWellProvider, useAlphaWell } from './context/AlphaWellContext';
 import Login from './pages/auth/Login';
 import Signup from './pages/auth/Signup';
 import AlphaWell from './components/AlphaWellPlatform.jsx';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 function ProtectedRoute({ children }) {
   const { isAuthenticated } = useAlphaWell();
   return isAuthenticated ? children : <Navigate to="/login" replace />;
@@ -39,6 +40,7 @@ export default function App() {
           <Footer />
         </div>
       </BrowserRouter>
+      <ToastContainer position="top-right" autoClose={2500} />
     </AlphaWellProvider>
   );
 }

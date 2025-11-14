@@ -2,16 +2,10 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAlphaWell } from '../../context/AlphaWellContext';
 import {
-  Activity,
-  Mail,
-  Lock,
-  ArrowRight,
-  User,
-  Briefcase,
-  BarChart3,
-  Eye,
-  EyeOff,
+  Activity, Mail, Lock, ArrowRight, User, Briefcase, BarChart3, Eye, EyeOff,
 } from 'lucide-react';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 export default function Login() {
   const { login } = useAlphaWell();
@@ -23,43 +17,28 @@ export default function Login() {
   const [password, setPassword] = useState('');
 
   const demoAccounts = [
-    {
-      role: 'Investor',
-      email: 'investor@alphawell.com',
-      icon: Briefcase,
-      color: 'from-blue-500 to-cyan-500',
-    },
-    {
-      role: 'Operator',
-      email: 'operator@alphawell.com',
-      icon: User,
-      color: 'from-indigo-500 to-blue-500',
-    },
-    {
-      role: 'Analyst',
-      email: 'analyst@alphawell.com',
-      icon: BarChart3,
-      color: 'from-purple-500 to-indigo-500',
-    },
+    { role: 'Investor', email: 'investor@alphawell.com', icon: Briefcase, color: 'from-blue-500 to-cyan-500' },
+    { role: 'Operator', email: 'operator@alphawell.com', icon: User, color: 'from-indigo-500 to-blue-500' },
+    { role: 'Analyst', email: 'analyst@alphawell.com', icon: BarChart3, color: 'from-purple-500 to-indigo-500' },
   ];
 
   const fillDemo = (demoEmail) => {
     setEmail(demoEmail);
     setPassword('demo123');
+    toast.info('Filled demo credentials');
   };
 
-  const onSubmit = (e) => {
+  const onSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-    const ok = login(email, password);
-    setTimeout(() => {
-      setIsLoading(false);
-      if (ok) navigate('/app');
-    }, 1000);
+    const ok = await login(email, password);
+    setIsLoading(false);
+    if (ok) navigate('/app');
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 flex items-center justify-center p-4 relative overflow-hidden">
+      <ToastContainer position="top-right" />
       {/* Animated Background */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-20 left-10 w-72 h-72 bg-blue-300 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob"></div>
@@ -90,24 +69,9 @@ export default function Login() {
 
           <div className="space-y-4">
             {[
-              {
-                icon: BarChart3,
-                title: 'Real-Time Analytics',
-                desc: 'Track performance metrics instantly',
-                color: 'bg-blue-100 text-blue-600',
-              },
-              {
-                icon: Activity,
-                title: 'AI-Powered Insights',
-                desc: 'Make data-driven decisions',
-                color: 'bg-indigo-100 text-indigo-600',
-              },
-              {
-                icon: Briefcase,
-                title: 'Enterprise Grade',
-                desc: 'Secure and scalable platform',
-                color: 'bg-purple-100 text-purple-600',
-              },
+              { icon: BarChart3, title: 'Real-Time Analytics', desc: 'Track performance metrics instantly', color: 'bg-blue-100 text-blue-600' },
+              { icon: Activity, title: 'AI-Powered Insights', desc: 'Make data-driven decisions', color: 'bg-indigo-100 text-indigo-600' },
+              { icon: Briefcase, title: 'Enterprise Grade', desc: 'Secure and scalable platform', color: 'bg-purple-100 text-purple-600' },
             ].map((f, i) => (
               <div key={i} className="flex items-start space-x-3">
                 <div className={`${f.color} rounded-lg p-2 mt-1`}>
@@ -138,18 +102,14 @@ export default function Login() {
             </div>
 
             <div className="mb-8">
-              <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">
-                Sign In
-              </h2>
+              <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-2">Sign In</h2>
               <p className="text-gray-600">Enter your credentials to continue</p>
             </div>
 
             <form onSubmit={onSubmit} className="space-y-6">
               {/* Email */}
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Email Address
-                </label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Email Address</label>
                 <div className="relative">
                   <Mail className="absolute left-4 top-3.5 w-5 h-5 text-gray-400" />
                   <input
@@ -165,9 +125,7 @@ export default function Login() {
 
               {/* Password */}
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Password
-                </label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Password</label>
                 <div className="relative">
                   <Lock className="absolute left-4 top-3.5 w-5 h-5 text-gray-400" />
                   <input
@@ -180,8 +138,8 @@ export default function Login() {
                   />
                   <button
                     type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-3 text-gray-400 hover:text-gray-600"
+                    onClick={() => setShowPassword((s) => !s)}
+                    className="absolute right-4 top-3 text-gray-400 hover:text-gray-600 cursor-pointer"
                   >
                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                   </button>
@@ -191,7 +149,7 @@ export default function Login() {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="group w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-4 rounded-xl font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                className="group w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-4 rounded-xl font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 shadow-lg shadow-blue-500/30 hover:shadow-xl hover:shadow-blue-500/40 transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 cursor-pointer"
               >
                 {isLoading ? (
                   <>
@@ -214,9 +172,7 @@ export default function Login() {
                   <div className="w-full border-t border-gray-300"></div>
                 </div>
                 <div className="relative flex justify-center text-sm">
-                  <span className="px-4 bg-white text-gray-500 font-medium">
-                    Quick Demo Access
-                  </span>
+                  <span className="px-4 bg-white text-gray-500 font-medium">Quick Demo Access</span>
                 </div>
               </div>
 
@@ -226,7 +182,7 @@ export default function Login() {
                     key={account.role}
                     type="button"
                     onClick={() => fillDemo(account.email)}
-                    className="group flex items-center justify-between p-4 border border-gray-200 rounded-xl hover:border-blue-300 hover:bg-blue-50/50 transition-all duration-300 hover:shadow-md"
+                    className="group flex items-center justify-between p-4 border border-gray-200 rounded-xl hover:border-blue-300 hover:bg-blue-50/50 transition-all duration-300 hover:shadow-md cursor-pointer"
                   >
                     <div className="flex items-center gap-3">
                       <div className={`bg-gradient-to-br ${account.color} p-2 rounded-lg`}>
@@ -252,7 +208,7 @@ export default function Login() {
               <button
                 type="button"
                 onClick={() => navigate('/signup')}
-                className="text-blue-600 hover:text-blue-700 font-semibold"
+                className="text-blue-600 hover:text-blue-700 font-semibold cursor-pointer"
               >
                 Create Account
               </button>
@@ -264,15 +220,8 @@ export default function Login() {
       {/* Animations */}
       <style>
         {`
-          @keyframes blob {
-            0%, 100% { transform: translate(0, 0) scale(1); }
-            33% { transform: translate(30px, -50px) scale(1.1); }
-            66% { transform: translate(-20px, 20px) scale(0.9); }
-          }
-          @keyframes pulse-slow {
-            0%, 100% { opacity: 0.3; }
-            50% { opacity: 0.5; }
-          }
+          @keyframes blob { 0%,100%{transform:translate(0,0) scale(1);} 33%{transform:translate(30px,-50px) scale(1.1);} 66%{transform:translate(-20px,20px) scale(0.9);} }
+          @keyframes pulse-slow { 0%,100%{opacity:.3;} 50%{opacity:.5;} }
           .animate-blob { animation: blob 12s ease-in-out infinite; }
           .animation-delay-2000 { animation-delay: 2s; }
           .animation-delay-4000 { animation-delay: 4s; }
