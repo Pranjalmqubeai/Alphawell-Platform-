@@ -369,7 +369,7 @@ const AlphaWellContext = createContext(null);
 export const useAlphaWell = () => useContext(AlphaWellContext);
 
 /** ---------------- Primary app API (your Django JWT) ---------------- */
-const APP_API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000';
+const APP_API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://3.236.227.108';
 const appApi = axios.create({ baseURL: APP_API_BASE });
 appApi.interceptors.request.use((config) => {
   const token = localStorage.getItem('aw_access');
