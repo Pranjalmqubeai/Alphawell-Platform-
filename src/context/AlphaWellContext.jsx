@@ -1375,9 +1375,18 @@ export function AlphaWellProvider({ children }) {
       esgRisk = "High";
     }
 
-    const paybackIndex = economicData.findIndex(
-      (d) => (d?.cumulativeCashFlow ?? -1) > 0
-    );
+    let paybackMonths;
+
+    // 1. Prefer API value
+    const apiPayback = lastApiResponse?.financial_metrics?.payback_month;
+    if (apiPayback !== undefined && apiPayback !== null) {
+      paybackMonths = Number(apiPayback);
+    } else {
+      const idx = economicData.findIndex(
+        (d) => (d?.cumulativeCashFlow ?? -1) > 0
+      );
+      paybackMonths = idx >= 0 ? idx : null;
+    }
 
     return {
       eurOil: totalOil,
@@ -1389,7 +1398,7 @@ export function AlphaWellProvider({ children }) {
       carbonCreditPotential: carbonCreditPotentialK,
       verdict,
       esgRisk,
-      paybackMonths: paybackIndex >= 0 ? paybackIndex : null,
+      paybackMonths,
     };
   }, [
     analyzed,
