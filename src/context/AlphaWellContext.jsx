@@ -869,8 +869,8 @@ export function AlphaWellProvider({ children }) {
   // Inputs
   const [wellParams, setWellParams] = useState({
     wellId: "",
-    latitude: -90,
-    longitude: -180,
+    latitude: 31.809364,
+    longitude: -106.049991,
     env_interval: "WOLFCAMP A LOWER",
     stateWellType: "GAS_WELL",
     env_well_type: "GAS",
