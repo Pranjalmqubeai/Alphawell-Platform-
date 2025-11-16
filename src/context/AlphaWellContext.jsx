@@ -1,30 +1,39 @@
-
-// import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
-// import axios from 'axios';
-// import { toast } from 'react-toastify';
-// import { NEIGHBOR_WELLS, MOCK_DECISIONS } from '../lib/mock';
-// import { generateProductionData, generateEconomicData, generateCarbonData } from '../lib/simulators';
-
+// import React, {
+//   createContext,
+//   useContext,
+//   useEffect,
+//   useMemo,
+//   useRef,
+//   useState,
+// } from "react";
+// import axios from "axios";
+// import { toast } from "react-toastify";
+// import {
+//   NEIGHBOR_WELLS as STATIC_NEIGHBOR_WELLS,
+//   MOCK_DECISIONS,
+// } from "../lib/mock";
+// import {
+//   generateProductionData,
+//   generateEconomicData,
+//   generateCarbonData,
+// } from "../lib/simulators";
 // const AlphaWellContext = createContext(null);
 // export const useAlphaWell = () => useContext(AlphaWellContext);
 
-// // ---------------- API client (axios) ----------------
-// const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000';
-// const api = axios.create({
-//   baseURL: API_BASE,
-// });
-
-// // attach Authorization automatically
-// api.interceptors.request.use((config) => {
-//   const token = localStorage.getItem('aw_access');
+// /** ---------------- Primary app API (your Django JWT) ---------------- */
+// const APP_API_BASE =
+//   import.meta.env.VITE_API_BASE_URL || "http://3.236.227.108";
+// const appApi = axios.create({ baseURL: APP_API_BASE });
+// appApi.interceptors.request.use((config) => {
+//   const token = localStorage.getItem("aw_access");
 //   if (token) config.headers.Authorization = `Bearer ${token}`;
 //   return config;
 // });
 
-// // token refresh on 401
+// /** Auto refresh JWT access on 401 */
 // let isRefreshing = false;
 // let queued = [];
-// api.interceptors.response.use(
+// appApi.interceptors.response.use(
 //   (r) => r,
 //   async (error) => {
 //     const orig = error.config;
@@ -32,36 +41,35 @@
 //       orig._retry = true;
 
 //       if (isRefreshing) {
-//         // queue the request until current refresh finishes
-//         return new Promise((resolve, reject) => {
-//           queued.push({ resolve, reject });
-//         })
+//         return new Promise((resolve, reject) =>
+//           queued.push({ resolve, reject })
+//         )
 //           .then((token) => {
 //             orig.headers.Authorization = `Bearer ${token}`;
-//             return api(orig);
+//             return appApi(orig);
 //           })
 //           .catch(Promise.reject);
 //       }
 
 //       try {
 //         isRefreshing = true;
-//         const refresh = localStorage.getItem('aw_refresh');
-//         if (!refresh) throw new Error('No refresh token');
-
-//         const { data } = await axios.post(`${API_BASE}/auth/refresh/`, { refresh });
+//         const refresh = localStorage.getItem("aw_refresh");
+//         if (!refresh) throw new Error("No refresh token");
+//         const { data } = await axios.post(`${APP_API_BASE}/auth/refresh/`, {
+//           refresh,
+//         });
 //         const newAccess = data?.access;
-//         if (!newAccess) throw new Error('No access in refresh');
-
-//         localStorage.setItem('aw_access', newAccess);
+//         if (!newAccess) throw new Error("No access in refresh");
+//         localStorage.setItem("aw_access", newAccess);
 //         queued.forEach((p) => p.resolve(newAccess));
 //         queued = [];
 //         orig.headers.Authorization = `Bearer ${newAccess}`;
-//         return api(orig);
+//         return appApi(orig);
 //       } catch (e) {
 //         queued.forEach((p) => p.reject(e));
 //         queued = [];
-//         localStorage.removeItem('aw_access');
-//         localStorage.removeItem('aw_refresh');
+//         localStorage.removeItem("aw_access");
+//         localStorage.removeItem("aw_refresh");
 //         return Promise.reject(e);
 //       } finally {
 //         isRefreshing = false;
@@ -71,92 +79,105 @@
 //   }
 // );
 
-// // ---------------- Provider ----------------
+// /** ---------------- Wells AI API (x-api-key) ---------------- */
+// const WELLS_API_BASE =
+//   import.meta.env.VITE_WELLS_API_BASE || "http://54.210.165.50:8003";
+// const WELLS_API_KEY =
+//   import.meta.env.VITE_WELLS_API_KEY || "mqube-wells-ai-2025-access-token";
+
+// const wellsApi = axios.create({
+//   baseURL: WELLS_API_BASE,
+//   headers: { "x-api-key": WELLS_API_KEY },
+// });
+
+// /** ---------------- Provider ---------------- */
 // export function AlphaWellProvider({ children }) {
 //   // Auth
 //   const [isAuthenticated, setIsAuthenticated] = useState(false);
 //   const [currentUser, setCurrentUser] = useState(null);
+//   const [lastApiResponse, setLastApiResponse] = useState(null);
+//   const [lastApiError, setLastApiError] = useState(null);
 //   const bootstrapped = useRef(false);
 
 //   // App state
-//   const [activeTab, setActiveTab] = useState('start');
+//   const [activeTab, setActiveTab] = useState("start");
 //   const [showHistorical, setShowHistorical] = useState(false);
 
 //   // Inputs
+
 //   const [wellParams, setWellParams] = useState({
-//     wellId: 'AW-2024-457',
-//     latitude: 31.8467,
-//     longitude: -102.3689,
-//     formation: 'Wolfcamp A',
-//     stateWellType: 'Horizontal',
-//     trajectory: 'Horizontal',
-//     tvd: 8450,
-//     md: 16250,
-//     lateralLength: 7500,
-//     elevationKB: 2847,
-//     predictionHorizon: 15,
+//     wellId: "",
+//     latitude: -90,
+//     longitude: -180,
+//     env_interval: "WOLFCAMP A LOWER",
+//     stateWellType: "GAS_WELL",
+//     env_well_type: "GAS",
+//     trajectory: "HORIZONTAL",
+//     env_wellbore_type: "SINGLE BORE",
+//     formation: "WOLFCAMP",
+//     tvd: 9579,
+//     md: 14650,
+//     env_elevation_kb_ft: 2995,
+//     env_elevation_gl_ft: 2995,
+//     elevationKB: 3019,
+//     elevationGL: 2995,
+//     env_fluid_type: "FRESH WATER",
+//     lateralLength: 4778,
+//     predictionHorizon: 30, // 360 months / 12
 //   });
 
 //   const [economicParams, setEconomicParams] = useState({
-//     totalCAPEX: 8_500_000,
-//     drillingExpense: 4_200_000,
-//     completionExpense: 4_300_000,
-//     fixedOPEX: 120_000,
-//     oilOPEX: 8.5,
-//     gasOPEX: 0.45,
-//     waterOPEX: 2.1,
-//     oilWI: 0.75,
-//     gasWI: 0.75,
-//     waterWI: 0.75,
-//     oilNRI: 0.6375,
-//     gasNRI: 0.6375,
-//     discountRate: 0.10,
+//     discountRate: 0.1, // 10% as fraction
+//     gasOPEX: 1.49,
+//     oilOPEX: 4.47,
+//     waterOPEX: 1.05,
+//     fixedOPEX: 14250 * 12, // API expects /month, UI uses /year
+//     oilWI: 1.0,
+//     gasWI: 0.91,
+//     waterWI: 1.0,
+//     oilNRI: 0.75,
+//     gasNRI: 0.75,
+//     totalCAPEX: 10_000_000,
+//     adValorem: 0.05,
+//     oilSeverance: 0.05,
+//     gasSeverance: 0.05,
+//     // plus your price fields if you want:
 //     oilPrice: 75,
 //     gasPrice: 3.25,
-//     oilDiff: 0.02,
-//     gasMult: 0.95,
-//     adValorem: 0.015,
-//     oilSeverance: 0.046,
-//     gasSeverance: 0.075,
 //   });
 
 //   const [carbonParams, setCarbonParams] = useState({
-//     processingIntensity: 1.0,
-//     flarePercent: 0.02,
+//     processingIntensity: 1,
+//     flarePercent: 0, // in fraction (0–1) for UI
 //     carbonPrice: 50,
 //     enableCarbonCredits: false,
 //   });
 
-//   // Simulation data
+//   // Data
 //   const [productionData, setProductionData] = useState([]);
 //   const [economicData, setEconomicData] = useState([]);
 //   const [carbonData, setCarbonData] = useState([]);
+//   const [neighborWells, setNeighborWells] = useState(STATIC_NEIGHBOR_WELLS);
 //   const [analyzed, setAnalyzed] = useState(false);
 //   const [isAnalyzing, setIsAnalyzing] = useState(false);
-
-//   // ---------- Auth helpers ----------
+//   /** ---------- Auth helpers ---------- */
 //   const storeTokens = ({ access, refresh }) => {
-//     if (access) localStorage.setItem('aw_access', access);
-//     if (refresh) localStorage.setItem('aw_refresh', refresh);
+//     if (access) localStorage.setItem("aw_access", access);
+//     if (refresh) localStorage.setItem("aw_refresh", refresh);
 //   };
-
 //   const clearTokens = () => {
-//     localStorage.removeItem('aw_access');
-//     localStorage.removeItem('aw_refresh');
+//     localStorage.removeItem("aw_access");
+//     localStorage.removeItem("aw_refresh");
 //   };
-
-//   const fetchMe = async () => {
-//     const { data } = await api.get('/auth/me/');
-//     return data;
-//   };
+//   const fetchMe = async () => (await appApi.get("/auth/me/")).data;
 
 //   // Bootstrap session if tokens exist (on page reload)
 //   useEffect(() => {
 //     if (bootstrapped.current) return;
 //     bootstrapped.current = true;
 
-//     const access = localStorage.getItem('aw_access');
-//     const refresh = localStorage.getItem('aw_refresh');
+//     const access = localStorage.getItem("aw_access");
+//     const refresh = localStorage.getItem("aw_refresh");
 //     if (!access || !refresh) return;
 
 //     (async () => {
@@ -172,42 +193,45 @@
 //     })();
 //   }, []);
 
-//   // ---------- Auth actions exposed to UI ----------
+//   /** ---------- Auth actions exposed to UI ---------- */
 //   const login = async (email, password) => {
 //     try {
-//       const { data } = await axios.post(`${API_BASE}/auth/login/`, { email, password });
-//       // Expecting: { access, refresh, user: {...} }
+//       const { data } = await axios.post(`${APP_API_BASE}/auth/login/`, {
+//         email,
+//         password,
+//       });
 //       storeTokens({ access: data?.access, refresh: data?.refresh });
-
 //       const user = data?.user || (await fetchMe());
 //       setCurrentUser(user);
 //       setIsAuthenticated(true);
-//       toast.success('Signed in successfully');
+//       toast.success("Signed in successfully");
 //       return true;
 //     } catch (err) {
-//       const msg = err.response?.data?.detail || 'Invalid credentials';
+//       const msg = err.response?.data?.detail || "Invalid credentials";
 //       toast.error(msg);
 //       return false;
 //     }
 //   };
 
-//   const signup = async ({ name, email, password, role = 'INVESTOR' }) => {
+//   const signup = async ({ name, email, password, role = "INVESTOR" }) => {
 //     try {
-//       // Expect backend to accept: {name,email,password,role} and return tokens + user OR just create user
-//       const { data } = await axios.post(`${API_BASE}/auth/signup/`, { name, email, password, role });
+//       const { data } = await axios.post(`${APP_API_BASE}/auth/signup/`, {
+//         name,
+//         email,
+//         password,
+//         role,
+//       });
 //       if (data?.access && data?.refresh) {
 //         storeTokens({ access: data.access, refresh: data.refresh });
-//         setIsAuthenticated(true);
 //         setCurrentUser(data?.user || (await fetchMe()));
+//         setIsAuthenticated(true);
 //       } else {
-//         // If backend returns 201 without tokens, do a login right after
-//         const ok = await login(email, password);
-//         if (!ok) throw new Error('Signup succeeded, login failed');
+//         await login(email, password);
 //       }
-//       toast.success('Account created');
+//       toast.success("Account created");
 //       return true;
 //     } catch (err) {
-//       const msg = err.response?.data?.detail || 'Signup failed';
+//       const msg = err.response?.data?.detail || "Signup failed";
 //       toast.error(msg);
 //       return false;
 //     }
@@ -215,10 +239,9 @@
 
 //   const logout = async () => {
 //     try {
-//       const refresh = localStorage.getItem('aw_refresh');
+//       const refresh = localStorage.getItem("aw_refresh");
 //       if (refresh) {
-//         // Optional: if you implemented blacklist/rotate
-//         await axios.post(`${API_BASE}/auth/logout/`, { refresh });
+//         await axios.post(`${APP_API_BASE}/auth/logout/`, { refresh });
 //       }
 //     } catch {
 //       /* ignore backend logout errors */
@@ -226,32 +249,311 @@
 //       clearTokens();
 //       setIsAuthenticated(false);
 //       setCurrentUser(null);
-//       setActiveTab('start');
+//       setActiveTab("start");
 //       setAnalyzed(false);
 //       setProductionData([]);
 //       setEconomicData([]);
 //       setCarbonData([]);
-//       toast.info('Signed out');
+//       setNeighborWells(STATIC_NEIGHBOR_WELLS);
+//       toast.info("Signed out");
 //     }
 //   };
 
-//   // ---------- Analysis actions ----------
-//   const analyze = () => {
-//     if (isAnalyzing) return;
-//     setIsAnalyzing(true);
+//   /** ---------- Helpers: map UI state -> API payload ---------- */
+//   const buildAnalyzePayload = () => {
+//     // UI stores horizon in YEARS, API expects MONTHS
+//     const horizonYears = Number(wellParams.predictionHorizon || 15);
+//     const horizonMonths = horizonYears * 12;
+
+//     return {
+//       // ✅ NEW: top-level fields required by API
+//       user_id: currentUser?.id ? String(currentUser.id) : "web-user",
+//       session_id: "alphawell-ui-session",
+
+//       well_params: {
+//         well_id: String(wellParams.wellId || ""),
+
+//         latitude: Number(wellParams.latitude),
+//         longitude: Number(wellParams.longitude),
+
+//         env_interval: String(wellParams.env_interval || "WOLFCAMP A LOWER"),
+//         state_well_type: String(wellParams.stateWellType || "OIL_WELL"),
+//         env_well_type: String(wellParams.env_well_type || "OIL"),
+//         trajectory: String(wellParams.trajectory || "HORIZONTAL"),
+//         env_wellbore_type: String(
+//           wellParams.env_wellbore_type || "SINGLE BORE"
+//         ),
+//         formation: String(wellParams.formation || "WOLFCAMP"),
+
+//         tvd_ft: Number(wellParams.tvd || 9000),
+//         md_ft: Number(wellParams.md || 15000),
+
+//         env_elevation_kb_ft: Number(
+//           wellParams.env_elevation_kb_ft ?? wellParams.elevationKB ?? 3000
+//         ),
+//         env_elevation_gl_ft: Number(wellParams.env_elevation_gl_ft ?? 2995),
+//         elevation_kb_ft: Number(wellParams.elevationKB ?? 3019),
+//         elevation_gl_ft: Number(wellParams.elevationGL ?? 2995),
+
+//         env_fluid_type: String(wellParams.env_fluid_type || "FRESH WATER"),
+//         lateral_length_ft: Number(wellParams.lateralLength || 7000),
+//         prediction_horizon: horizonMonths,
+//       },
+
+//       economic_params: {
+//         discount_factor: Number((economicParams.discountRate ?? 0) * 100),
+
+//         gas_opex: Number(economicParams.gasOPEX ?? 0),
+//         oil_opex: Number(economicParams.oilOPEX ?? 0),
+//         water_opex: Number(economicParams.waterOPEX ?? 0),
+
+//         fixed_opex: Number((economicParams.fixedOPEX ?? 0) / 12),
+
+//         working_interest_oil: Number((economicParams.oilWI ?? 0) * 100),
+//         working_interest_gas: Number((economicParams.gasWI ?? 0) * 100),
+//         working_interest_water: Number((economicParams.waterWI ?? 0) * 100),
+
+//         net_revenue_interest_oil: Number((economicParams.oilNRI ?? 0) * 100),
+//         net_revenue_interest_gas: Number((economicParams.gasNRI ?? 0) * 100),
+
+//         total_capex: Number(economicParams.totalCAPEX ?? 0),
+
+//         ad_valorem: Number((economicParams.adValorem ?? 0) * 100),
+//         oil_sev_tax: Number((economicParams.oilSeverance ?? 0) * 100),
+//         gas_sev_tax: Number((economicParams.gasSeverance ?? 0) * 100),
+//       },
+
+//       carbon_params: {
+//         processing_intensity_factor: Number(
+//           carbonParams.processingIntensity ?? 1
+//         ),
+//         flaring_percentage: Number((carbonParams.flarePercent ?? 0) * 100),
+//         carbon_price_per_ton: Number(carbonParams.carbonPrice ?? 50),
+//       },
+
+//       include_confidence: true,
+//     };
+//   };
+
+//   /** ---------- Transform API -> UI state ---------- */
+//   // inside AlphaWellContext.jsx
+//   const adaptAnalysis = (res) => {
+//     const prodArr = Array.isArray(res.production_data)
+//       ? res.production_data
+//       : [];
+//     const cfArr = Array.isArray(res.cash_flow) ? res.cash_flow : [];
+//     const ciArr = Array.isArray(res.carbon_intensity)
+//       ? res.carbon_intensity
+//       : [];
+
+//     let prod = [];
+//     let econ = [];
+//     let carbon = [];
+
+//     // --- Production timeseries ---
+//     if (prodArr.length && cfArr.length) {
+//       let cumOil = 0,
+//         cumGas = 0,
+//         cumWater = 0;
+
+//       const cfByMonth = new Map(cfArr.map((r) => [Number(r.month), r]));
+
+//       prod = prodArr.map((d) => {
+//         const oil = Number(d.gross_production_oil_bbls || 0);
+//         const gas = Number(d.gross_production_wh_gas_mcf || 0);
+//         const water = Number(d.gross_production_water_bbls || 0);
+
+//         cumOil += oil;
+//         cumGas += gas;
+//         cumWater += water;
+
+//         const cf = cfByMonth.get(Number(d.time)) || {};
+//         const date = (cf.date || "").slice(0, 10) || `M${d.time}`;
+
+//         return {
+//           date,
+//           oil,
+//           gas,
+//           water,
+//           cumulativeOil: cumOil,
+//           cumulativeGas: cumGas,
+//           cumulativeWater: cumWater,
+//           waterCut: null,
+//         };
+//       });
+//     } else if (res.production_metrics) {
+//       // ✅ synthesize single-point series from summary metrics
+//       const pm = res.production_metrics;
+//       prod = [
+//         {
+//           date: "Year 1",
+//           oil: Number(pm.year1_oil || 0),
+//           gas: Number(pm.year1_gas || 0),
+//           water: Number(pm.year1_water || 0),
+//           cumulativeOil: Number(pm.total_oil_eur || 0),
+//           cumulativeGas: Number(pm.total_gas_eur || 0),
+//           cumulativeWater: Number(pm.total_water || 0),
+//           waterCut: null,
+//         },
+//       ];
+//     }
+
+//     // --- Economic / cash-flow timeseries ---
+//     if (cfArr.length) {
+//       econ = cfArr.map((m) => ({
+//         date: (m.date || "").slice(0, 10),
+//         revenue: Number(m.revenue || 0),
+//         opex: Number(m.opex || 0),
+//         taxes: Number(m.taxes || 0),
+//         cumulativeCashFlow: Number(m.cumulative_cash_flow || 0),
+//         npv: Number(res.financial_metrics?.npv || 0),
+//       }));
+//     } else if (res.financial_metrics) {
+//       const fm = res.financial_metrics;
+//       econ = [
+//         {
+//           date: "Year 1",
+//           revenue: 0,
+//           opex: Number(fm.total_opex || 0),
+//           taxes: Number(fm.total_tax || 0),
+//           cumulativeCashFlow: Number(fm.total_cash_flow || 0),
+//           npv: Number(fm.npv || 0),
+//         },
+//       ];
+//     }
+
+//     // --- Carbon intensity timeseries ---
+//     if (ciArr.length) {
+//       carbon = ciArr.map((c) => ({
+//         date: (c.date || "").slice(0, 10),
+//         intensity: Number(c.carbon_intensity || 0),
+//         combustionOil: 0,
+//         combustionGas: 0,
+//         processing: 0,
+//         flaring: 0,
+//         cumulativeCO2: Number(res.carbon_metrics?.total_emitted || 0),
+//       }));
+//     } else if (res.carbon_metrics) {
+//       const cm = res.carbon_metrics;
+//       carbon = [
+//         {
+//           date: "Year 1",
+//           intensity: Number(cm.carbon_intensity || 0),
+//           combustionOil: 0,
+//           combustionGas: 0,
+//           processing: 0,
+//           flaring: 0,
+//           cumulativeCO2: Number(cm.total_emitted || 0),
+//         },
+//       ];
+//     }
+
+//     return { prod, econ, carbon };
+//   };
+
+//   const fetchNeighborhood = async () => {
 //     try {
-//       const horizon = Number(wellParams.predictionHorizon || 15);
-//       const lateral = Number(wellParams.lateralLength || 7500);
+//       const payload = {
+//         latitude: Number(wellParams.latitude),
+//         longitude: Number(wellParams.longitude),
+//         radius_mi: 5,
+//         formation: String(wellParams.formation || "WOLFCAMP"),
+//         trajectory: String(wellParams.trajectory || "HORIZONTAL"),
+//         env_well_type: String(wellParams.env_well_type || "OIL"),
+//         env_wellbore_type: String(
+//           wellParams.env_wellbore_type || "SINGLE BORE"
+//         ),
+//         env_fluid_type: String(wellParams.env_fluid_type || "FRESH WATER"),
+//       };
+//       const { data } = await wellsApi.post(
+//         "/api/neighborhood/analyze",
+//         payload
+//       );
+//       const avgCI = Array.isArray(
+//         data?.neighborhood_production_metrics?.avg_carbon_intensity
+//       )
+//         ? data.neighborhood_production_metrics.avg_carbon_intensity.reduce(
+//             (a, b) => a + b,
+//             0
+//           ) /
+//           (data.neighborhood_production_metrics.avg_carbon_intensity.length ||
+//             1)
+//         : null;
 
-//       const prod = generateProductionData(horizon, lateral);
-//       const econ = generateEconomicData(prod, economicParams);
-//       const carb = generateCarbonData(prod, carbonParams);
+//       const mapped = (data?.wells || []).map((w, idx) => ({
+//         id: String(w.well_id || `W-${idx}`),
+//         formation: w.formation || payload.formation,
+//         distance: Number(w.distance_mi || 0).toFixed(2),
+//         eur: Number(w.cumulative_oil || 0), // proxy for chart
+//         npvRaw: 0,
+//         carbonIntensity: avgCI ? Number(avgCI).toFixed(0) : 0,
+//         status: w.status || "ACTIVE",
+//       }));
+//       if (mapped.length) setNeighborWells(mapped);
+//     } catch (e) {
+//       console.warn("Neighborhood fetch failed:", e?.message);
+//     }
+//   };
 
+//   /** ---------- Analysis (live first, sim fallback) ---------- */
+//   const analyze = async () => {
+//     if (isAnalyzing) return;
+
+//     if (!wellParams.latitude || !wellParams.longitude) {
+//       toast.error("Please provide latitude and longitude for the well.");
+//       return;
+//     }
+
+//     setIsAnalyzing(true);
+//     setLastApiError(null);
+
+//     try {
+//       const payload = buildAnalyzePayload();
+//       console.log("[AlphaWell] /api/analysis/analyze payload:", payload);
+
+//       const { data } = await wellsApi.post("/api/analysis/analyze", payload);
+
+//       console.log("[AlphaWell] /api/analysis/analyze response:", data);
+//       setLastApiResponse(data);
+
+//       const { prod, econ, carbon } = adaptAnalysis(data);
+
+//       const haveProd = prod.length > 0;
+//       const haveEcon = econ.length > 0;
+//       const haveCarb = carbon.length > 0;
+
+//       if (!haveProd && !haveEcon && !haveCarb) {
+//         console.warn(
+//           "[AlphaWell] API success but no usable data – keeping as not analyzed"
+//         );
+//         setProductionData([]);
+//         setEconomicData([]);
+//         setCarbonData([]);
+//         setAnalyzed(false);
+//         return;
+//       }
+
+//       // ✅ this will now run
 //       setProductionData(prod);
 //       setEconomicData(econ);
-//       setCarbonData(carb);
+//       setCarbonData(carbon);
 //       setAnalyzed(true);
-//       setActiveTab('executive');
+//       setActiveTab("executive");
+
+//       fetchNeighborhood();
+//     } catch (e) {
+//       console.error(
+//         "[AlphaWell] analyze failed:",
+//         e.response?.data || e.message,
+//         e
+//       );
+//       setLastApiError(e.response?.data || e.message || "Unknown error");
+//       toast.error("Analysis failed. No results available.");
+
+//       setProductionData([]);
+//       setEconomicData([]);
+//       setCarbonData([]);
+//       setAnalyzed(false);
 //     } finally {
 //       setIsAnalyzing(false);
 //     }
@@ -262,14 +564,18 @@
 //     setEconomicData([]);
 //     setCarbonData([]);
 //     setAnalyzed(false);
-//     setActiveTab('input');
+//     setActiveTab("input");
 //   };
 
-//   // ---------- KPIs (defensive) ----------
+//   /** ---------- KPIs (defensive) ---------- */
 //   const kpis = useMemo(() => {
-//     if (!analyzed || economicData.length === 0 || productionData.length === 0 || carbonData.length === 0) {
+//     if (
+//       !analyzed ||
+//       !economicData.length ||
+//       !productionData.length ||
+//       !carbonData.length
+//     )
 //       return null;
-//     }
 
 //     const lastProd = productionData[productionData.length - 1] ?? {};
 //     const lastEcon = economicData[economicData.length - 1] ?? {};
@@ -277,33 +583,38 @@
 
 //     const totalOil = Number(lastProd.cumulativeOil || 0);
 //     const totalGas = Number(lastProd.cumulativeGas || 0);
-//     const npv = Number(lastEcon.npv || 0) / 1_000_000;
+//     const npv = Number(lastEcon.npv || 0);
 
 //     const totalCF = Number(lastEcon.cumulativeCashFlow || 0);
 //     const years = Number(wellParams.predictionHorizon || 1);
 //     const capex = Number(economicParams.totalCAPEX || 0);
 //     const irr =
-//       totalCF > 0 && capex > 0 ? ((totalCF / capex) ** (1 / years) - 1) * 100 : -100;
+//       totalCF > 0 && capex > 0
+//         ? ((totalCF / capex) ** (1 / years) - 1) * 100
+//         : -100;
 
-//     const totalCO2_tons = Number(lastCarbon.cumulativeCO2 || 0); // tons
-//     const boeLife = totalOil + totalGas / 6; // 6 mcf = 1 boe
-//     const avgIntensity = boeLife > 0 ? (totalCO2_tons * 1_000_000) / boeLife : 0; // g CO2e/BOE
+//     const totalCO2_tons = Number(lastCarbon.cumulativeCO2 || 0);
+//     const boeLife = totalOil + totalGas / 6;
+//     const avgIntensity =
+//       boeLife > 0 ? (totalCO2_tons * 1_000_000) / boeLife : 0;
 
 //     const carbonCreditPotentialK = carbonParams.enableCarbonCredits
-//       ? (totalCO2_tons * 0.15 * Number(carbonParams.carbonPrice || 0)) / 1_000 // show in $K
+//       ? (totalCO2_tons * 0.15 * Number(carbonParams.carbonPrice || 0)) / 1_000
 //       : 0;
 
-//     let verdict = 'Evaluate Further';
-//     let esgRisk = 'Moderate';
-//     if (npv > 8 && irr > 25 && avgIntensity < 45) {
-//       verdict = 'Drill';
-//       esgRisk = 'Low';
-//     } else if (npv < 4 || irr < 15 || avgIntensity > 55) {
-//       verdict = 'High Risk';
-//       esgRisk = 'High';
+//     let verdict = "Evaluate Further";
+//     let esgRisk = "Moderate";
+//     if (npvRaw > 8 && irr > 25 && avgIntensity < 45) {
+//       verdict = "Drill";
+//       esgRisk = "Low";
+//     } else if (npvRaw < 4 || irr < 15 || avgIntensity > 55) {
+//       verdict = "High Risk";
+//       esgRisk = "High";
 //     }
 
-//     const paybackIndex = economicData.findIndex((d) => (d?.cumulativeCashFlow ?? -1) > 0);
+//     const paybackIndex = economicData.findIndex(
+//       (d) => (d?.cumulativeCashFlow ?? -1) > 0
+//     );
 
 //     return {
 //       eurOil: totalOil,
@@ -317,7 +628,82 @@
 //       esgRisk,
 //       paybackMonths: paybackIndex >= 0 ? paybackIndex : null,
 //     };
-//   }, [analyzed, productionData, economicData, carbonData, economicParams, wellParams, carbonParams]);
+//   }, [
+//     analyzed,
+//     productionData,
+//     economicData,
+//     carbonData,
+//     economicParams,
+//     wellParams,
+//     carbonParams,
+//   ]);
+
+//   /** ---------- Optional: Reports API (save/list/load) ---------- */
+//   const saveReport = async (userId = currentUser?.id || 1) => {
+//     try {
+//       const payload = {
+//         success: true,
+//         production_data: productionData.map((d, i) => ({
+//           time: i + 1,
+//           gross_production_oil_bbls: d.oil,
+//           gross_production_wh_gas_mcf: d.gas,
+//           gross_production_water_bbls: d.water,
+//           oil_lower_ci: 0,
+//           oil_upper_ci: 0,
+//           gas_lower_ci: 0,
+//           gas_upper_ci: 0,
+//           water_lower_ci: 0,
+//           water_upper_ci: 0,
+//         })),
+//         cash_flow: economicData.map((d, i) => ({
+//           month: i + 1,
+//           date: d.date,
+//           net_cash_flow: d.revenue - d.opex - d.taxes,
+//           cumulative_cash_flow: d.cumulativeCashFlow,
+//           revenue: d.revenue,
+//           opex: d.opex,
+//           taxes: d.taxes,
+//           npv: d.npv,
+//         })),
+//         financial_metrics: { npvRaw: economicData.at(-1)?.npvRaw || 0 },
+//         carbon_metrics: {
+//           total_emitted: carbonData.at(-1)?.cumulativeCO2 || 0,
+//           carbon_intensity: carbonData.at(-1)?.intensity || 0,
+//           carbon_credits: 0,
+//         },
+//         carbon_intensity: carbonData.map((c) => ({
+//           date: c.date,
+//           carbon_intensity: c.intensity,
+//         })),
+//       };
+//       const { data } = await wellsApi.post(
+//         `/api/reports/save/${userId}`,
+//         payload
+//       );
+//       toast.success(`Saved: ${data?.report_id || "report"}`);
+//       return data;
+//     } catch (e) {
+//       toast.error("Save failed");
+//       return null;
+//     }
+//   };
+
+//   const listReports = async (userId = currentUser?.id || 1) => {
+//     const { data } = await wellsApi.get(`/api/reports/list/${userId}`);
+//     return data?.reports || [];
+//   };
+
+//   const loadReport = async (userId, reportId) => {
+//     const { data } = await wellsApi.get(
+//       `/api/reports/load/${userId}/${reportId}`
+//     );
+//     const { prod, econ, carbon } = adaptAnalysis(data);
+//     setProductionData(prod);
+//     setEconomicData(econ);
+//     setCarbonData(carbon);
+//     setAnalyzed(true);
+//     setActiveTab("executive");
+//   };
 
 //   const value = {
 //     // auth
@@ -341,38 +727,68 @@
 //     carbonParams,
 //     setCarbonParams,
 
-//     // analysis data
+//     // data
 //     productionData,
 //     economicData,
 //     carbonData,
+//     neighborWells, // live neighborhood for the tab
 //     analyzed,
 //     analyze,
 //     isAnalyzing,
 //     resetAnalysis,
 //     kpis,
 
-//     // static demo data
-//     NEIGHBOR_WELLS,
+//     // static/history
 //     MOCK_DECISIONS,
+
+//     // reports
+//     saveReport,
+//     listReports,
+//     loadReport,
+//     // debugging
+//     lastApiResponse,
+//     lastApiError,
 //   };
 
-//   return <AlphaWellContext.Provider value={value}>{children}</AlphaWellContext.Provider>;
+//   return (
+//     <AlphaWellContext.Provider value={value}>
+//       {children}
+//     </AlphaWellContext.Provider>
+//   );
 // }
+
 // src/context/AlphaWellContext.jsx
-import React, { createContext, useContext, useEffect, useMemo, useRef, useState } from 'react';
-import axios from 'axios';
-import { toast } from 'react-toastify';
-import { NEIGHBOR_WELLS as STATIC_NEIGHBOR_WELLS, MOCK_DECISIONS } from '../lib/mock';
-import { generateProductionData, generateEconomicData, generateCarbonData } from '../lib/simulators';
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import axios from "axios";
+import { toast } from "react-toastify";
+import {
+  NEIGHBOR_WELLS as STATIC_NEIGHBOR_WELLS,
+  MOCK_DECISIONS,
+} from "../lib/mock";
+import {
+  generateProductionData,
+  generateEconomicData,
+  generateCarbonData,
+} from "../lib/simulators";
 
 const AlphaWellContext = createContext(null);
 export const useAlphaWell = () => useContext(AlphaWellContext);
 
 /** ---------------- Primary app API (your Django JWT) ---------------- */
-const APP_API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://3.236.227.108';
+const APP_API_BASE =
+  import.meta.env.VITE_API_BASE_URL || "http://3.236.227.108";
+
 const appApi = axios.create({ baseURL: APP_API_BASE });
+
 appApi.interceptors.request.use((config) => {
-  const token = localStorage.getItem('aw_access');
+  const token = localStorage.getItem("aw_access");
   if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
@@ -388,7 +804,9 @@ appApi.interceptors.response.use(
       orig._retry = true;
 
       if (isRefreshing) {
-        return new Promise((resolve, reject) => queued.push({ resolve, reject }))
+        return new Promise((resolve, reject) =>
+          queued.push({ resolve, reject })
+        )
           .then((token) => {
             orig.headers.Authorization = `Bearer ${token}`;
             return appApi(orig);
@@ -398,12 +816,14 @@ appApi.interceptors.response.use(
 
       try {
         isRefreshing = true;
-        const refresh = localStorage.getItem('aw_refresh');
-        if (!refresh) throw new Error('No refresh token');
-        const { data } = await axios.post(`${APP_API_BASE}/auth/refresh/`, { refresh });
+        const refresh = localStorage.getItem("aw_refresh");
+        if (!refresh) throw new Error("No refresh token");
+        const { data } = await axios.post(`${APP_API_BASE}/auth/refresh/`, {
+          refresh,
+        });
         const newAccess = data?.access;
-        if (!newAccess) throw new Error('No access in refresh');
-        localStorage.setItem('aw_access', newAccess);
+        if (!newAccess) throw new Error("No access in refresh");
+        localStorage.setItem("aw_access", newAccess);
         queued.forEach((p) => p.resolve(newAccess));
         queued = [];
         orig.headers.Authorization = `Bearer ${newAccess}`;
@@ -411,8 +831,8 @@ appApi.interceptors.response.use(
       } catch (e) {
         queued.forEach((p) => p.reject(e));
         queued = [];
-        localStorage.removeItem('aw_access');
-        localStorage.removeItem('aw_refresh');
+        localStorage.removeItem("aw_access");
+        localStorage.removeItem("aw_refresh");
         return Promise.reject(e);
       } finally {
         isRefreshing = false;
@@ -423,12 +843,14 @@ appApi.interceptors.response.use(
 );
 
 /** ---------------- Wells AI API (x-api-key) ---------------- */
-const WELLS_API_BASE = import.meta.env.VITE_WELLS_API_BASE || 'http://54.210.165.50:8003';
-const WELLS_API_KEY  = import.meta.env.VITE_WELLS_API_KEY  || 'mqube-wells-ai-2025-access-token';
+const WELLS_API_BASE =
+  import.meta.env.VITE_WELLS_API_BASE || "http://54.210.165.50:8003";
+const WELLS_API_KEY =
+  import.meta.env.VITE_WELLS_API_KEY || "mqube-wells-ai-2025-access-token";
 
 const wellsApi = axios.create({
   baseURL: WELLS_API_BASE,
-  headers: { 'x-api-key': WELLS_API_KEY },
+  headers: { "x-api-key": WELLS_API_KEY },
 });
 
 /** ---------------- Provider ---------------- */
@@ -436,56 +858,57 @@ export function AlphaWellProvider({ children }) {
   // Auth
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
+  const [lastApiResponse, setLastApiResponse] = useState(null);
+  const [lastApiError, setLastApiError] = useState(null);
   const bootstrapped = useRef(false);
 
   // App state
-  const [activeTab, setActiveTab] = useState('start');
+  const [activeTab, setActiveTab] = useState("start");
   const [showHistorical, setShowHistorical] = useState(false);
 
   // Inputs
   const [wellParams, setWellParams] = useState({
-    wellId: 'AW-2024-457',
-    latitude: 31.8467,
-    longitude: -102.3689,
-    formation: 'WOLFCAMP',
-    env_interval: 'WOLFCAMP A LOWER',
-    stateWellType: 'OIL_WELL',
-    trajectory: 'HORIZONTAL',
-    tvd: 8450,
-    md: 16250,
-    lateralLength: 7500,
-    elevationKB: 2847,
-    predictionHorizon: 15, // years (API expects months)
+    wellId: "",
+    latitude: -90,
+    longitude: -180,
+    env_interval: "WOLFCAMP A LOWER",
+    stateWellType: "GAS_WELL",
+    env_well_type: "GAS",
+    trajectory: "HORIZONTAL",
+    env_wellbore_type: "SINGLE BORE",
+    formation: "WOLFCAMP",
+    tvd: 9579,
+    md: 14650,
+    env_elevation_kb_ft: 2995,
+    env_elevation_gl_ft: 2995,
+    elevationKB: 3019,
+    elevationGL: 2995,
+    env_fluid_type: "FRESH WATER",
+    lateralLength: 4778,
+    predictionHorizon: 30, // 30 years → 30 * 12 = 360
   });
 
   const [economicParams, setEconomicParams] = useState({
-    totalCAPEX: 8_500_000,
-    drillingExpense: 4_200_000,
-    completionExpense: 4_300_000,
-    fixedOPEX: 120_000,      // per year (we convert to /month for the API)
-    oilOPEX: 8.5,            // $/bbl
-    gasOPEX: 0.45,           // $/mcf
-    waterOPEX: 2.1,          // $/bbl
-    oilWI: 0.75,
-    gasWI: 0.75,
-    waterWI: 0.75,
-    oilNRI: 0.6375,
-    gasNRI: 0.6375,
-    discountRate: 0.10,      // 10% (API uses percent)
-    oilPrice: 75,
-    gasPrice: 3.25,
-    oilDiff: 0.02,
-    gasMult: 0.95,
-    adValorem: 0.015,
-    oilSeverance: 0.046,
-    gasSeverance: 0.075,
+    discountRate: 0.1, // 10% → we multiply by 100
+    gasOPEX: 1.49,
+    oilOPEX: 4.47,
+    waterOPEX: 1.05,
+    fixedOPEX: 14250 * 12, // per year → we /12
+    oilWI: 1.0, // 100% → we *100
+    gasWI: 0.91, // 91%  → we *100
+    waterWI: 1.0,
+    oilNRI: 0.75, // 75% → we *100
+    gasNRI: 0.75,
+    totalCAPEX: 10000000,
+    adValorem: 0.05,
+    oilSeverance: 0.05,
+    gasSeverance: 0.05,
   });
 
   const [carbonParams, setCarbonParams] = useState({
-    processingIntensity: 1.0,
-    flarePercent: 0.02,
+    processingIntensity: 1,
+    flarePercent: 0,
     carbonPrice: 50,
-    enableCarbonCredits: false,
   });
 
   // Data
@@ -498,22 +921,22 @@ export function AlphaWellProvider({ children }) {
 
   /** ---------- Auth helpers ---------- */
   const storeTokens = ({ access, refresh }) => {
-    if (access) localStorage.setItem('aw_access', access);
-    if (refresh) localStorage.setItem('aw_refresh', refresh);
+    if (access) localStorage.setItem("aw_access", access);
+    if (refresh) localStorage.setItem("aw_refresh", refresh);
   };
   const clearTokens = () => {
-    localStorage.removeItem('aw_access');
-    localStorage.removeItem('aw_refresh');
+    localStorage.removeItem("aw_access");
+    localStorage.removeItem("aw_refresh");
   };
-  const fetchMe = async () => (await appApi.get('/auth/me/')).data;
+  const fetchMe = async () => (await appApi.get("/auth/me/")).data;
 
   // Bootstrap session if tokens exist (on page reload)
   useEffect(() => {
     if (bootstrapped.current) return;
     bootstrapped.current = true;
 
-    const access = localStorage.getItem('aw_access');
-    const refresh = localStorage.getItem('aw_refresh');
+    const access = localStorage.getItem("aw_access");
+    const refresh = localStorage.getItem("aw_refresh");
     if (!access || !refresh) return;
 
     (async () => {
@@ -532,23 +955,31 @@ export function AlphaWellProvider({ children }) {
   /** ---------- Auth actions exposed to UI ---------- */
   const login = async (email, password) => {
     try {
-      const { data } = await axios.post(`${APP_API_BASE}/auth/login/`, { email, password });
+      const { data } = await axios.post(`${APP_API_BASE}/auth/login/`, {
+        email,
+        password,
+      });
       storeTokens({ access: data?.access, refresh: data?.refresh });
       const user = data?.user || (await fetchMe());
       setCurrentUser(user);
       setIsAuthenticated(true);
-      toast.success('Signed in successfully');
+      toast.success("Signed in successfully");
       return true;
     } catch (err) {
-      const msg = err.response?.data?.detail || 'Invalid credentials';
+      const msg = err.response?.data?.detail || "Invalid credentials";
       toast.error(msg);
       return false;
     }
   };
 
-  const signup = async ({ name, email, password, role = 'INVESTOR' }) => {
+  const signup = async ({ name, email, password, role = "INVESTOR" }) => {
     try {
-      const { data } = await axios.post(`${APP_API_BASE}/auth/signup/`, { name, email, password, role });
+      const { data } = await axios.post(`${APP_API_BASE}/auth/signup/`, {
+        name,
+        email,
+        password,
+        role,
+      });
       if (data?.access && data?.refresh) {
         storeTokens({ access: data.access, refresh: data.refresh });
         setCurrentUser(data?.user || (await fetchMe()));
@@ -556,10 +987,10 @@ export function AlphaWellProvider({ children }) {
       } else {
         await login(email, password);
       }
-      toast.success('Account created');
+      toast.success("Account created");
       return true;
     } catch (err) {
-      const msg = err.response?.data?.detail || 'Signup failed';
+      const msg = err.response?.data?.detail || "Signup failed";
       toast.error(msg);
       return false;
     }
@@ -567,7 +998,7 @@ export function AlphaWellProvider({ children }) {
 
   const logout = async () => {
     try {
-      const refresh = localStorage.getItem('aw_refresh');
+      const refresh = localStorage.getItem("aw_refresh");
       if (refresh) {
         await axios.post(`${APP_API_BASE}/auth/logout/`, { refresh });
       }
@@ -577,109 +1008,190 @@ export function AlphaWellProvider({ children }) {
       clearTokens();
       setIsAuthenticated(false);
       setCurrentUser(null);
-      setActiveTab('start');
+      setActiveTab("start");
       setAnalyzed(false);
       setProductionData([]);
       setEconomicData([]);
       setCarbonData([]);
       setNeighborWells(STATIC_NEIGHBOR_WELLS);
-      toast.info('Signed out');
+      toast.info("Signed out");
     }
   };
 
   /** ---------- Helpers: map UI state -> API payload ---------- */
   const buildAnalyzePayload = () => {
-    const horizonMonths = Number(wellParams.predictionHorizon || 15) * 12;
+    const horizonYears = Number(wellParams.predictionHorizon || 15);
+    const horizonMonths = horizonYears * 12;
+
     return {
+      user_id: currentUser?.id ? String(currentUser.id) : "string",
+      session_id: "string",
+
       well_params: {
-        well_id: String(wellParams.wellId || ''),
+        well_id: String(wellParams.wellId || ""),
         latitude: Number(wellParams.latitude),
         longitude: Number(wellParams.longitude),
-        env_interval: String(wellParams.env_interval || 'WOLFCAMP A LOWER'),
-        state_well_type: String(wellParams.stateWellType || 'OIL_WELL'),
-        env_well_type: String(wellParams.env_well_type || 'OIL'),
-        trajectory: String(wellParams.trajectory || 'HORIZONTAL'),
-        env_wellbore_type: String(wellParams.env_wellbore_type || 'SINGLE BORE'),
-        formation: String(wellParams.formation || 'WOLFCAMP'),
-        tvd_ft: Number(wellParams.tvd || 9000),
-        md_ft: Number(wellParams.md || 15000),
-        env_elevation_kb_ft: Number(wellParams.env_elevation_kb_ft || wellParams.elevationKB || 3000),
-        env_elevation_gl_ft: Number(wellParams.env_elevation_gl_ft || 2995),
-        elevation_kb_ft: Number(wellParams.elevationKB || 3019),
-        elevation_gl_ft: Number(wellParams.elevationGL || 2995),
-        env_fluid_type: String(wellParams.env_fluid_type || 'FRESH WATER'),
-        lateral_length_ft: Number(wellParams.lateralLength || 7000),
-        prediction_horizon: horizonMonths,
+        env_interval: String(wellParams.env_interval || "WOLFCAMP A LOWER"),
+        state_well_type: String(wellParams.stateWellType || "GAS_WELL"),
+        env_well_type: String(wellParams.env_well_type || "GAS"),
+        trajectory: String(wellParams.trajectory || "HORIZONTAL"),
+        env_wellbore_type: String(
+          wellParams.env_wellbore_type || "SINGLE BORE"
+        ),
+        formation: String(wellParams.formation || "WOLFCAMP"),
+        tvd_ft: Number(wellParams.tvd || 9579),
+        md_ft: Number(wellParams.md || 14650),
+        env_elevation_kb_ft: Number(
+          wellParams.env_elevation_kb_ft ?? wellParams.elevationKB ?? 2995
+        ),
+        env_elevation_gl_ft: Number(wellParams.env_elevation_gl_ft ?? 2995),
+        elevation_kb_ft: Number(wellParams.elevationKB ?? 3019),
+        elevation_gl_ft: Number(wellParams.elevationGL ?? 2995),
+        env_fluid_type: String(wellParams.env_fluid_type || "FRESH WATER"),
+        lateral_length_ft: Number(wellParams.lateralLength || 4778),
+        prediction_horizon: horizonMonths, // 30 * 12 = 360
       },
+
       economic_params: {
-        discount_factor: Number((economicParams.discountRate ?? 0) * 100),   // % for API
-        gas_opex: Number(economicParams.gasOPEX ?? 0),
-        oil_opex: Number(economicParams.oilOPEX ?? 0),
-        water_opex: Number(economicParams.waterOPEX ?? 0),
-        fixed_opex: Number((economicParams.fixedOPEX ?? 0) / 12),           // convert to /month
-        working_interest_oil: Number((economicParams.oilWI ?? 0) * 100),
-        working_interest_gas: Number((economicParams.gasWI ?? 0) * 100),
+        discount_factor: Number((economicParams.discountRate ?? 0) * 100), // 0.10 -> 10
+        gas_opex: Number(economicParams.gasOPEX ?? 0), // 1.49
+        oil_opex: Number(economicParams.oilOPEX ?? 0), // 4.47
+        water_opex: Number(economicParams.waterOPEX ?? 0), // 1.05
+        fixed_opex: Number((economicParams.fixedOPEX ?? 0) / 12), // 14250*12 /12 = 14250
+        working_interest_oil: Number((economicParams.oilWI ?? 0) * 100), // 1.0 -> 100
+        working_interest_gas: Number((economicParams.gasWI ?? 0) * 100), // 0.91 -> 91
         working_interest_water: Number((economicParams.waterWI ?? 0) * 100),
-        net_revenue_interest_oil: Number((economicParams.oilNRI ?? 0) * 100),
+        net_revenue_interest_oil: Number((economicParams.oilNRI ?? 0) * 100), // 0.75 -> 75
         net_revenue_interest_gas: Number((economicParams.gasNRI ?? 0) * 100),
         total_capex: Number(economicParams.totalCAPEX ?? 0),
-        ad_valorem: Number((economicParams.adValorem ?? 0) * 100),
-        oil_sev_tax: Number((economicParams.oilSeverance ?? 0) * 100),
-        gas_sev_tax: Number((economicParams.gasSeverance ?? 0) * 100),
       },
+
       carbon_params: {
-        processing_intensity_factor: Number(carbonParams.processingIntensity ?? 1),
-        flaring_percentage: Number((carbonParams.flarePercent ?? 0) * 100),
+        processing_intensity_factor: Number(
+          carbonParams.processingIntensity ?? 1
+        ),
+        flaring_percentage: Number((carbonParams.flarePercent ?? 0) * 100), // 0 -> 0
         carbon_price_per_ton: Number(carbonParams.carbonPrice ?? 50),
       },
+
       include_confidence: true,
     };
   };
 
   /** ---------- Transform API -> UI state ---------- */
   const adaptAnalysis = (res) => {
-    // Production
-    let cumOil = 0, cumGas = 0, cumWater = 0;
-    const cfByMonth = new Map((res.cash_flow || []).map((r) => [Number(r.month), r]));
+    const prodArr = Array.isArray(res.production_data)
+      ? res.production_data
+      : [];
+    const cfArr = Array.isArray(res.cash_flow) ? res.cash_flow : [];
+    const ciArr = Array.isArray(res.carbon_intensity)
+      ? res.carbon_intensity
+      : [];
 
-    const prod = (res.production_data || []).map((d) => {
-      cumOil  += Number(d.gross_production_oil_bbls || 0);
-      cumGas  += Number(d.gross_production_wh_gas_mcf || 0);
-      cumWater+= Number(d.gross_production_water_bbls || 0);
-      const cf = cfByMonth.get(Number(d.time)) || {};
-      const date = (cf.date || '').slice(0, 10) || `M${d.time}`;
-      return {
-        date,
-        oil: Number(d.gross_production_oil_bbls || 0),
-        gas: Number(d.gross_production_wh_gas_mcf || 0),
-        water: Number(d.gross_production_water_bbls || 0),
-        cumulativeOil: cumOil,
-        cumulativeGas: cumGas,
-        cumulativeWater: cumWater,
-        waterCut: null,
-      };
-    });
+    let prod = [];
+    let econ = [];
+    let carbon = [];
 
-    // Economic (monthly)
-    const econ = (res.cash_flow || []).map((m) => ({
-      date: (m.date || '').slice(0, 10),
-      revenue: Number(m.revenue || 0),
-      opex: Number(m.opex || 0),
-      taxes: Number(m.taxes || 0),
-      cumulativeCashFlow: Number(m.cumulative_cash_flow || 0),
-      npv: Number(res.financial_metrics?.npv || 0),
-    }));
+    // --- Production timeseries ---
+    if (prodArr.length && cfArr.length) {
+      let cumOil = 0,
+        cumGas = 0,
+        cumWater = 0;
 
-    // Carbon series (intensity only)
-    const carbon = (res.carbon_intensity || []).map((c) => ({
-      date: (c.date || '').slice(0, 10),
-      intensity: Number(c.carbon_intensity || 0),
-      combustionOil: 0,
-      combustionGas: 0,
-      processing: 0,
-      flaring: 0,
-      cumulativeCO2: Number(res.carbon_metrics?.total_emitted || 0),
-    }));
+      const cfByMonth = new Map(cfArr.map((r) => [Number(r.month), r]));
+
+      prod = prodArr.map((d) => {
+        const oil = Number(d.gross_production_oil_bbls || 0);
+        const gas = Number(d.gross_production_wh_gas_mcf || 0);
+        const water = Number(d.gross_production_water_bbls || 0);
+
+        cumOil += oil;
+        cumGas += gas;
+        cumWater += water;
+
+        const cf = cfByMonth.get(Number(d.time)) || {};
+        const date = (cf.date || "").slice(0, 10) || `M${d.time}`;
+
+        return {
+          date,
+          oil,
+          gas,
+          water,
+          cumulativeOil: cumOil,
+          cumulativeGas: cumGas,
+          cumulativeWater: cumWater,
+          waterCut: null,
+        };
+      });
+    } else if (res.production_metrics) {
+      const pm = res.production_metrics;
+      prod = [
+        {
+          date: "Year 1",
+          oil: Number(pm.year1_oil || 0),
+          gas: Number(pm.year1_gas || 0),
+          water: Number(pm.year1_water || 0),
+          cumulativeOil: Number(pm.total_oil_eur || 0),
+          cumulativeGas: Number(pm.total_gas_eur || 0),
+          cumulativeWater: Number(pm.total_water || 0),
+          waterCut: null,
+        },
+      ];
+    }
+
+    // --- Economic / cash-flow timeseries ---
+    // --- Economic / cash-flow timeseries ---
+    if (cfArr.length) {
+      econ = cfArr.map((m) => ({
+        date: (m.date || "").slice(0, 10),
+        revenue: Number(m.revenue || 0),
+        opex: Number(m.opex || 0),
+        taxes: Number(m.taxes || 0),
+        cumulativeCashFlow: Number(m.cumulative_cash_flow || 0),
+        // raw metrics from API
+        npv: Number(res.financial_metrics?.npv ?? 0),
+        irr: Number(res.financial_metrics?.irr ?? 0),
+      }));
+    } else if (res.financial_metrics) {
+      const fm = res.financial_metrics;
+      econ = [
+        {
+          date: "Year 1",
+          revenue: 0,
+          opex: Number(fm.total_opex || 0),
+          taxes: Number(fm.total_tax || 0),
+          cumulativeCashFlow: Number(fm.total_cash_flow || 0),
+          npv: Number(fm.npv ?? 0),
+          irr: Number(fm.irr ?? 0),
+        },
+      ];
+    }
+
+    // --- Carbon intensity timeseries ---
+    if (ciArr.length) {
+      carbon = ciArr.map((c) => ({
+        date: (c.date || "").slice(0, 10),
+        intensity: Number(c.carbon_intensity || 0),
+        combustionOil: 0,
+        combustionGas: 0,
+        processing: 0,
+        flaring: 0,
+        cumulativeCO2: Number(res.carbon_metrics?.total_emitted || 0),
+      }));
+    } else if (res.carbon_metrics) {
+      const cm = res.carbon_metrics;
+      carbon = [
+        {
+          date: "Year 1",
+          intensity: Number(cm.carbon_intensity || 0),
+          combustionOil: 0,
+          combustionGas: 0,
+          processing: 0,
+          flaring: 0,
+          cumulativeCO2: Number(cm.total_emitted || 0),
+        },
+      ];
+    }
 
     return { prod, econ, carbon };
   };
@@ -690,74 +1202,102 @@ export function AlphaWellProvider({ children }) {
         latitude: Number(wellParams.latitude),
         longitude: Number(wellParams.longitude),
         radius_mi: 5,
-        formation: String(wellParams.formation || 'WOLFCAMP'),
-        trajectory: String(wellParams.trajectory || 'HORIZONTAL'),
-        env_well_type: String(wellParams.env_well_type || 'OIL'),
-        env_wellbore_type: String(wellParams.env_wellbore_type || 'SINGLE BORE'),
-        env_fluid_type: String(wellParams.env_fluid_type || 'FRESH WATER'),
+        formation: String(wellParams.formation || "WOLFCAMP"),
+        trajectory: String(wellParams.trajectory || "HORIZONTAL"),
+        env_well_type: String(wellParams.env_well_type || "OIL"),
+        env_wellbore_type: String(
+          wellParams.env_wellbore_type || "SINGLE BORE"
+        ),
+        env_fluid_type: String(wellParams.env_fluid_type || "FRESH WATER"),
       };
-      const { data } = await wellsApi.post('/api/neighborhood/analyze', payload);
-      const avgCI = Array.isArray(data?.neighborhood_production_metrics?.avg_carbon_intensity)
-        ? data.neighborhood_production_metrics.avg_carbon_intensity.reduce((a, b) => a + b, 0) /
-          (data.neighborhood_production_metrics.avg_carbon_intensity.length || 1)
+      const { data } = await wellsApi.post(
+        "/api/neighborhood/analyze",
+        payload
+      );
+      const avgCI = Array.isArray(
+        data?.neighborhood_production_metrics?.avg_carbon_intensity
+      )
+        ? data.neighborhood_production_metrics.avg_carbon_intensity.reduce(
+            (a, b) => a + b,
+            0
+          ) /
+          (data.neighborhood_production_metrics.avg_carbon_intensity.length ||
+            1)
         : null;
 
       const mapped = (data?.wells || []).map((w, idx) => ({
         id: String(w.well_id || `W-${idx}`),
         formation: w.formation || payload.formation,
         distance: Number(w.distance_mi || 0).toFixed(2),
-        eur: Number(w.cumulative_oil || 0), // proxy for chart
+        eur: Number(w.cumulative_oil || 0),
         npv: 0,
         carbonIntensity: avgCI ? Number(avgCI).toFixed(0) : 0,
-        status: w.status || 'ACTIVE',
+        status: w.status || "ACTIVE",
       }));
       if (mapped.length) setNeighborWells(mapped);
     } catch (e) {
-      console.warn('Neighborhood fetch failed:', e?.message);
+      console.warn("Neighborhood fetch failed:", e?.message);
     }
   };
 
   /** ---------- Analysis (live first, sim fallback) ---------- */
   const analyze = async () => {
     if (isAnalyzing) return;
+
+    if (!wellParams.latitude || !wellParams.longitude) {
+      toast.error("Please provide latitude and longitude for the well.");
+      return;
+    }
+
     setIsAnalyzing(true);
+    setLastApiError(null);
+
     try {
       const payload = buildAnalyzePayload();
-      const { data } = await wellsApi.post('/api/analysis/analyze', payload);
+      console.log("[AlphaWell] /api/analysis/analyze payload:", payload);
+
+      const { data } = await wellsApi.post("/api/analysis/analyze", payload);
+
+      console.log("[AlphaWell] /api/analysis/analyze response:", data);
+      setLastApiResponse(data);
 
       const { prod, econ, carbon } = adaptAnalysis(data);
-      const haveProd = Array.isArray(prod) && prod.length;
-      const haveEcon = Array.isArray(econ) && econ.length;
-      const haveCarb = Array.isArray(carbon) && carbon.length;
 
-      const horizonYears = Number(wellParams.predictionHorizon || 15);
-      const lateral = Number(wellParams.lateralLength || 7500);
+      const haveProd = prod.length > 0;
+      const haveEcon = econ.length > 0;
+      const haveCarb = carbon.length > 0;
 
-      const prodUse = haveProd ? prod : generateProductionData(horizonYears, lateral);
-      const econUse = haveEcon ? econ : generateEconomicData(prodUse, economicParams);
-      const carbUse = haveCarb ? carbon : generateCarbonData(prodUse, carbonParams);
+      if (!haveProd && !haveEcon && !haveCarb) {
+        console.warn(
+          "[AlphaWell] API success but no usable data – keeping as not analyzed"
+        );
+        setProductionData([]);
+        setEconomicData([]);
+        setCarbonData([]);
+        setAnalyzed(false);
+        return;
+      }
 
-      setProductionData(prodUse);
-      setEconomicData(econUse);
-      setCarbonData(carbUse);
-      setAnalyzed(true);
-      setActiveTab('executive');
-
-      // fetch neighbors in background
-      fetchNeighborhood();
-    } catch (e) {
-      console.error(e);
-      toast.error('Analysis failed. Falling back to simulator.');
-      const horizonYears = Number(wellParams.predictionHorizon || 15);
-      const lateral = Number(wellParams.lateralLength || 7500);
-      const prod = generateProductionData(horizonYears, lateral);
-      const econ = generateEconomicData(prod, economicParams);
-      const carb = generateCarbonData(prod, carbonParams);
       setProductionData(prod);
       setEconomicData(econ);
-      setCarbonData(carb);
+      setCarbonData(carbon);
       setAnalyzed(true);
-      setActiveTab('executive');
+      setActiveTab("executive");
+
+      fetchNeighborhood();
+    } catch (e) {
+      console.error(
+        "[AlphaWell] analyze failed:",
+        e.response?.data || e.message,
+        e
+      );
+      setLastApiError(e.response?.data || e.message || "Unknown error");
+      toast.error("Analysis failed. No results available.");
+
+      setProductionData([]);
+      setEconomicData([]);
+      setCarbonData([]);
+      setAnalyzed(false);
     } finally {
       setIsAnalyzing(false);
     }
@@ -768,12 +1308,18 @@ export function AlphaWellProvider({ children }) {
     setEconomicData([]);
     setCarbonData([]);
     setAnalyzed(false);
-    setActiveTab('input');
+    setActiveTab("input");
   };
 
   /** ---------- KPIs (defensive) ---------- */
   const kpis = useMemo(() => {
-    if (!analyzed || !economicData.length || !productionData.length || !carbonData.length) return null;
+    if (
+      !analyzed ||
+      !economicData.length ||
+      !productionData.length ||
+      !carbonData.length
+    )
+      return null;
 
     const lastProd = productionData[productionData.length - 1] ?? {};
     const lastEcon = economicData[economicData.length - 1] ?? {};
@@ -781,32 +1327,62 @@ export function AlphaWellProvider({ children }) {
 
     const totalOil = Number(lastProd.cumulativeOil || 0);
     const totalGas = Number(lastProd.cumulativeGas || 0);
-    const npv = Number(lastEcon.npv || 0) / 1_000_000;
+
+    // ✅ Always trust the API NPV first
+    const apiNpv = Number(
+      lastApiResponse?.financial_metrics?.npv ?? lastEcon.npv ?? 0
+    );
+    const npv = apiNpv;
+
+    // ✅ Prefer API IRR; fall back to derived IRR only if missing
+    const cfIrrRaw =
+      lastApiResponse?.financial_metrics?.irr ?? lastEcon.irr ?? null;
 
     const totalCF = Number(lastEcon.cumulativeCashFlow || 0);
     const years = Number(wellParams.predictionHorizon || 1);
     const capex = Number(economicParams.totalCAPEX || 0);
-    const irr = totalCF > 0 && capex > 0 ? ((totalCF / capex) ** (1 / years) - 1) * 100 : -100;
+
+    // If API gave an IRR, use it.
+    // Heuristic: if |irr| <= 1, treat as fraction and convert to %
+    let irr;
+    if (cfIrrRaw !== null && !Number.isNaN(Number(cfIrrRaw))) {
+      const apiIrrNum = Number(cfIrrRaw);
+      irr = Math.abs(apiIrrNum) <= 1 ? apiIrrNum * 100 : apiIrrNum;
+    } else {
+      irr =
+        totalCF > 0 && capex > 0
+          ? ((totalCF / capex) ** (1 / years) - 1) * 100
+          : -100;
+    }
 
     const totalCO2_tons = Number(lastCarbon.cumulativeCO2 || 0);
     const boeLife = totalOil + totalGas / 6;
-    const avgIntensity = boeLife > 0 ? (totalCO2_tons * 1_000_000) / boeLife : 0;
+    const avgIntensity =
+      boeLife > 0 ? (totalCO2_tons * 1_000_000) / boeLife : 0;
 
     const carbonCreditPotentialK = carbonParams.enableCarbonCredits
       ? (totalCO2_tons * 0.15 * Number(carbonParams.carbonPrice || 0)) / 1_000
       : 0;
 
-    let verdict = 'Evaluate Further';
-    let esgRisk = 'Moderate';
-    if (npv > 8 && irr > 25 && avgIntensity < 45) { verdict = 'Drill'; esgRisk = 'Low'; }
-    else if (npv < 4 || irr < 15 || avgIntensity > 55) { verdict = 'High Risk'; esgRisk = 'High'; }
+    let verdict = "Evaluate Further";
+    let esgRisk = "Moderate";
 
-    const paybackIndex = economicData.findIndex((d) => (d?.cumulativeCashFlow ?? -1) > 0);
+    if (npv > 0 && irr > 25 && avgIntensity < 45) {
+      verdict = "Drill";
+      esgRisk = "Low";
+    } else if (npv < 0 || irr < 0 || avgIntensity > 55) {
+      verdict = "High Risk";
+      esgRisk = "High";
+    }
+
+    const paybackIndex = economicData.findIndex(
+      (d) => (d?.cumulativeCashFlow ?? -1) > 0
+    );
 
     return {
       eurOil: totalOil,
       eurGas: totalGas,
-      npv,
+      npv, // raw API NPV – UI formats it
       irr,
       totalCO2: totalCO2_tons,
       avgIntensity,
@@ -815,7 +1391,16 @@ export function AlphaWellProvider({ children }) {
       esgRisk,
       paybackMonths: paybackIndex >= 0 ? paybackIndex : null,
     };
-  }, [analyzed, productionData, economicData, carbonData, economicParams, wellParams, carbonParams]);
+  }, [
+    analyzed,
+    productionData,
+    economicData,
+    carbonData,
+    economicParams,
+    wellParams,
+    carbonParams,
+    lastApiResponse, // ✅ add this dependency
+  ]);
 
   /** ---------- Optional: Reports API (save/list/load) ---------- */
   const saveReport = async (userId = currentUser?.id || 1) => {
@@ -827,29 +1412,42 @@ export function AlphaWellProvider({ children }) {
           gross_production_oil_bbls: d.oil,
           gross_production_wh_gas_mcf: d.gas,
           gross_production_water_bbls: d.water,
-          oil_lower_ci: 0, oil_upper_ci: 0,
-          gas_lower_ci: 0, gas_upper_ci: 0,
-          water_lower_ci: 0, water_upper_ci: 0,
+          oil_lower_ci: 0,
+          oil_upper_ci: 0,
+          gas_lower_ci: 0,
+          gas_upper_ci: 0,
+          water_lower_ci: 0,
+          water_upper_ci: 0,
         })),
         cash_flow: economicData.map((d, i) => ({
           month: i + 1,
           date: d.date,
-          net_cash_flow: (d.revenue - d.opex - d.taxes),
+          net_cash_flow: d.revenue - d.opex - d.taxes,
           cumulative_cash_flow: d.cumulativeCashFlow,
           revenue: d.revenue,
           opex: d.opex,
           taxes: d.taxes,
-          nvp: d.npv,
+          npv: d.npv, // keep for completeness; backend may ignore
         })),
         financial_metrics: { npv: economicData.at(-1)?.npv || 0 },
-        carbon_metrics: { total_emitted: carbonData.at(-1)?.cumulativeCO2 || 0, carbon_intensity: carbonData.at(-1)?.intensity || 0, carbon_credits: 0 },
-        carbon_intensity: carbonData.map((c) => ({ date: c.date, carbon_intensity: c.intensity })),
+        carbon_metrics: {
+          total_emitted: carbonData.at(-1)?.cumulativeCO2 || 0,
+          carbon_intensity: carbonData.at(-1)?.intensity || 0,
+          carbon_credits: 0,
+        },
+        carbon_intensity: carbonData.map((c) => ({
+          date: c.date,
+          carbon_intensity: c.intensity,
+        })),
       };
-      const { data } = await wellsApi.post(`/api/reports/save/${userId}`, payload);
-      toast.success(`Saved: ${data?.report_id || 'report'}`);
+      const { data } = await wellsApi.post(
+        `/api/reports/save/${userId}`,
+        payload
+      );
+      toast.success(`Saved: ${data?.report_id || "report"}`);
       return data;
     } catch (e) {
-      toast.error('Save failed');
+      toast.error("Save failed");
       return null;
     }
   };
@@ -860,38 +1458,66 @@ export function AlphaWellProvider({ children }) {
   };
 
   const loadReport = async (userId, reportId) => {
-    const { data } = await wellsApi.get(`/api/reports/load/${userId}/${reportId}`);
+    const { data } = await wellsApi.get(
+      `/api/reports/load/${userId}/${reportId}`
+    );
     const { prod, econ, carbon } = adaptAnalysis(data);
     setProductionData(prod);
     setEconomicData(econ);
     setCarbonData(carbon);
     setAnalyzed(true);
-    setActiveTab('executive');
+    setActiveTab("executive");
   };
 
   const value = {
     // auth
-    isAuthenticated, currentUser, login, logout, signup,
+    isAuthenticated,
+    currentUser,
+    login,
+    logout,
+    signup,
 
     // nav/state
-    activeTab, setActiveTab, showHistorical, setShowHistorical,
+    activeTab,
+    setActiveTab,
+    showHistorical,
+    setShowHistorical,
 
     // inputs
-    wellParams, setWellParams,
-    economicParams, setEconomicParams,
-    carbonParams, setCarbonParams,
+    wellParams,
+    setWellParams,
+    economicParams,
+    setEconomicParams,
+    carbonParams,
+    setCarbonParams,
 
     // data
-    productionData, economicData, carbonData,
-    neighborWells, // live neighborhood for the tab
-    analyzed, analyze, isAnalyzing, resetAnalysis, kpis,
+    productionData,
+    economicData,
+    carbonData,
+    neighborWells,
+    analyzed,
+    analyze,
+    isAnalyzing,
+    resetAnalysis,
+    kpis,
 
     // static/history
     MOCK_DECISIONS,
 
     // reports
-    saveReport, listReports, loadReport,
+    saveReport,
+    listReports,
+    loadReport,
+
+    // debugging
+    lastApiResponse,
+    lastApiError,
   };
 
-  return <AlphaWellContext.Provider value={value}>{children}</AlphaWellContext.Provider>;
+  return (
+    <AlphaWellContext.Provider value={value}>
+      {children}
+    </AlphaWellContext.Provider>
+  );
 }

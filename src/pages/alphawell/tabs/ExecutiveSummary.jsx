@@ -140,10 +140,14 @@ export default function ExecutiveSummary() {
             <DollarSign className="w-5 h-5 text-green-600" />
           </div>
           <p className="text-3xl font-bold text-gray-900">
-            ${kpis.npv.toFixed(2)}M
+            {Number(kpis.npv).toLocaleString("en-US", {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}
           </p>
+
           <p className="text-xs text-gray-500 mt-1">
-            @ {(economicParams.discountRate * 100).toFixed(0)}% discount
+            @ {(economicParams.discountRate * 100).toFixed(0)}% discount (USD)
           </p>
         </div>
 

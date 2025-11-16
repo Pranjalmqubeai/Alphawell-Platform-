@@ -17,13 +17,16 @@ export default function Economic() {
   const { economicData, kpis, economicParams } = useAlphaWell();
   const [openEdit, setOpenEdit] = useState(false);
 
-  return (
-    <div className="space-y-6">
-      if (!economicData?.length) return{" "}
+  if (!economicData?.length) {
+    return (
       <div className="p-6 bg-white rounded-xl shadow text-gray-700">
         No economic data yet. Please run Analyze.
       </div>
-      ;
+    );
+  }
+
+  return (
+    <div className="space-y-6">
       <div className="flex items-center justify-end">
         <button
           onClick={() => setOpenEdit(true)}

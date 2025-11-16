@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useEffect } from "react";
+
 import {
   Save,
   LogOut,
@@ -17,8 +18,18 @@ import Production from "./tabs/Production";
 import ExecutiveSummary from "./tabs/ExecutiveSummary";
 
 export default function AlphaWellPlatform() {
-  const { activeTab, setActiveTab, analyzed, logout, wellParams } =
-    useAlphaWell();
+  const {
+  activeTab,
+  setActiveTab,
+  analyzed,
+  logout,
+  wellParams,
+  saveReport,
+  currentUser,
+  lastApiResponse,
+  lastApiError,
+} = useAlphaWell();
+
 
   if (activeTab === "start") return <StartScreen />;
   if (activeTab === "input") return <InputConfig />;
@@ -34,7 +45,10 @@ export default function AlphaWellPlatform() {
   const handlePdf = () => {
     if (activeTab !== "executive") {
       setActiveTab("executive");
-      setTimeout(() => window.dispatchEvent(new CustomEvent("aw-export-exec-pdf")), 250);
+      setTimeout(
+        () => window.dispatchEvent(new CustomEvent("aw-export-exec-pdf")),
+        250
+      );
     } else {
       window.dispatchEvent(new CustomEvent("aw-export-exec-pdf"));
     }
@@ -60,7 +74,11 @@ export default function AlphaWellPlatform() {
             </h1>
 
             <p className="mt-1 text-sm text-slate-600">
-              Well: <span className="font-medium text-slate-900">{wellParams.wellId}</span> • {wellParams.formation}
+              Well:{" "}
+              <span className="font-medium text-slate-900">
+                {wellParams.wellId}
+              </span>{" "}
+              • {wellParams.formation}
               {analyzed ? (
                 <span className="ml-2 inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-200">
                   analyzed
@@ -76,7 +94,7 @@ export default function AlphaWellPlatform() {
           {/* Right: actions */}
           <div className="flex flex-wrap items-center gap-2 md:gap-3">
             <button
-              onClick={() => {}}
+              onClick={() => saveReport(currentUser?.id || 1)}
               className="cursor-pointer inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-2 text-white font-semibold shadow hover:shadow-lg hover:shadow-blue-500/20 transition-all"
             >
               <Save className="w-4 h-4" />
@@ -145,8 +163,12 @@ export default function AlphaWellPlatform() {
 
         {!analyzed && activeTab === "executive" && (
           <div className="rounded-2xl border border-dashed border-gray-300 bg-white/60 p-10 text-center">
-            <h3 className="text-lg font-semibold text-gray-900">No analysis yet</h3>
-            <p className="mt-1 text-gray-600">Run Analyze from the Input screen to unlock the Executive Summary.</p>
+            <h3 className="text-lg font-semibold text-gray-900">
+              No analysis yet
+            </h3>
+            <p className="mt-1 text-gray-600">
+              Run Analyze from the Input screen to unlock the Executive Summary.
+            </p>
             <button
               onClick={() => setActiveTab("input")}
               className="cursor-pointer mt-4 inline-flex items-center rounded-lg bg-blue-600 px-4 py-2 text-white text-sm font-semibold hover:bg-blue-700"
