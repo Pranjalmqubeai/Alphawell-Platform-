@@ -1,5 +1,4 @@
-import React, { useEffect } from "react";
-
+import React, { useEffect, useState } from "react";
 import {
   Save,
   LogOut,
@@ -8,6 +7,7 @@ import {
   Calculator,
   FileText,
   ChevronRight,
+  CheckCircle,
 } from "lucide-react";
 import { useAlphaWell } from "../../context/AlphaWellContext";
 import StartScreen from "./StartScreen";
@@ -19,17 +19,18 @@ import ExecutiveSummary from "./tabs/ExecutiveSummary";
 
 export default function AlphaWellPlatform() {
   const {
-  activeTab,
-  setActiveTab,
-  analyzed,
-  logout,
-  wellParams,
-  saveReport,
-  currentUser,
-  lastApiResponse,
-  lastApiError,
-} = useAlphaWell();
+    activeTab,
+    setActiveTab,
+    analyzed,
+    logout,
+    wellParams,
+    saveReport,
+    currentUser,
+    lastApiResponse,
+    lastApiError,
+  } = useAlphaWell();
 
+  const [showSaveToast, setShowSaveToast] = useState(false);
 
   if (activeTab === "start") return <StartScreen />;
   if (activeTab === "input") return <InputConfig />;
@@ -54,8 +55,40 @@ export default function AlphaWellPlatform() {
     }
   };
 
+  const handleSaveScenario = () => {
+    // Call existing save logic
+    saveReport(currentUser?.id || 1);
+
+    // Show toast
+    setShowSaveToast(true);
+
+    // Auto-hide after 3 seconds
+    setTimeout(() => {
+      setShowSaveToast(false);
+    }, 3000);
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 relative">
+      {/* Save toast */}
+      {showSaveToast && (
+        <div className="fixed top-20 right-6 z-40">
+          <div className="flex items-center gap-3 rounded-xl bg-white shadow-lg border border-emerald-200 px-4 py-3">
+            <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-100">
+              <CheckCircle className="w-5 h-5 text-emerald-600" />
+            </div>
+            <div className="text-sm">
+              <p className="font-semibold text-emerald-800">
+                Decision saved
+              </p>
+              <p className="text-emerald-700 text-xs">
+                Your scenario and decision have been saved for future reference.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <header className="sticky top-0 z-20 w-full bg-white/70 backdrop-blur-xl border-b border-blue-100 shadow-sm">
         <div className="w-full px-6 py-4 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
@@ -94,7 +127,7 @@ export default function AlphaWellPlatform() {
           {/* Right: actions */}
           <div className="flex flex-wrap items-center gap-2 md:gap-3">
             <button
-              onClick={() => saveReport(currentUser?.id || 1)}
+              onClick={handleSaveScenario}
               className="cursor-pointer inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-2 text-white font-semibold shadow hover:shadow-lg hover:shadow-blue-500/20 transition-all"
             >
               <Save className="w-4 h-4" />

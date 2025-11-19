@@ -47,24 +47,23 @@ export default function Economic() {
 
   // formatted display helpers
   const toMillions = (v) => (v || 0) / 1_000_000;
+
   const formatNumber = (value, decimals = 2) =>
-    Number(value ?? 0).toLocaleString("en-IN", {
+    Number(value ?? 0).toLocaleString("en-US", {
       minimumFractionDigits: decimals,
       maximumFractionDigits: decimals,
     });
+
   const npvDisplay = formatNumber(npvRaw, 2);
-
   const irrDisplay = `${formatNumber(irrRaw, 1)}%`;
-
   const eurDisplay = `${formatNumber(eurRaw, 2)} MMboe`;
 
   const paybackDisplay = paybackMonth ? `Month ${paybackMonth}` : "N/A";
 
-  const totalOpexDisplay = `${formatNumber((totalOpexRaw), 2)}`;
-
-  const totalTaxDisplay = `${formatNumber((totalTaxRaw), 2)}`;
-
-  const netCFDisplay = `${formatNumber((netCashFlowRaw), 2)}`;
+  // 👇 US-style commas + $ + no decimals for these three
+  const totalOpexDisplay = `$${formatNumber(totalOpexRaw, 0)}`;
+  const totalTaxDisplay = `$${formatNumber(totalTaxRaw, 0)}`;
+  const netCFDisplay = `$${formatNumber(netCashFlowRaw, 0)}`;
 
   return (
     <div className="space-y-6">
@@ -252,3 +251,4 @@ function SumCard({ title, value, accent = "text-slate-900" }) {
     </div>
   );
 }
+
