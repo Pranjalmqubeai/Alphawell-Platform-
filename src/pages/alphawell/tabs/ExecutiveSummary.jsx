@@ -288,7 +288,7 @@ export default function ExecutiveSummary() {
       </div>
 
       {/* Carbon Intelligence Row */}
-      <div className="grid md:grid-cols-2 gap-6">
+      {/* <div className="grid md:grid-cols-2 gap-6">
         <div className="bg-white rounded-xl shadow-lg p-6">
           <h3 className="text-lg font-bold text-gray-900 mb-4">
             Carbon Intensity Over Time
@@ -334,7 +334,7 @@ export default function ExecutiveSummary() {
             </PieChart>
           </ResponsiveContainer>
         </div>
-      </div>
+      </div> */}
 
       {/* Well Characteristics */}
       <div className="bg-white rounded-xl shadow-lg p-6">
@@ -379,16 +379,16 @@ export default function ExecutiveSummary() {
             </p>
           </div>
           <div>
-            <p className="text-sm text-gray-600">Oil Price</p>
-            <p className="font-semibold text-gray-900">
+            {/* <p className="text-sm text-gray-600">Oil Price</p> */}
+            {/* <p className="font-semibold text-gray-900">
               ${economicParams.oilPrice}/bbl
-            </p>
+            </p> */}
           </div>
           <div>
-            <p className="text-sm text-gray-600">Gas Price</p>
+            {/* <p className="text-sm text-gray-600">Gas Price</p>
             <p className="font-semibold text-gray-900">
               ${economicParams.gasPrice}/mcf
-            </p>
+            </p> */}
           </div>
         </div>
       </div>

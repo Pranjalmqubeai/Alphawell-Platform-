@@ -13,8 +13,10 @@ import {
 } from "recharts";
 import { useAlphaWell } from "../../../context/AlphaWellContext";
 import ExecParamsModal from "./ExecParamsModal";
+
 export default function Economic() {
-  const { economicData, kpis, economicParams } = useAlphaWell();
+  const { economicData, kpis, economicParams, lastApiResponse } =
+    useAlphaWell();
   const [openEdit, setOpenEdit] = useState(false);
 
   if (!economicData?.length) {
@@ -25,47 +27,91 @@ export default function Economic() {
     );
   }
 
+  // ---- Derive metrics from API (with fallbacks) ----
+  const fm = lastApiResponse?.financial_metrics || {};
+
+  const npvRaw = fm.npv ?? kpis?.npv ?? 0; // assume USD
+  const irrRaw = fm.irr ?? kpis?.irr ?? 0; // %
+  const eurRaw = fm.eur ?? 0; // BOE
+  const paybackMonth = fm.payback_month ?? kpis?.paybackMonths ?? null;
+
+  const totalOpexRaw =
+    fm.total_opex ?? economicData.reduce((sum, d) => sum + (d.opex || 0), 0);
+
+  const totalTaxRaw =
+    fm.total_tax ?? economicData.reduce((sum, d) => sum + (d.taxes || 0), 0);
+
+  const netCashFlowRaw =
+    fm.total_cash_flow ??
+    (economicData[economicData.length - 1]?.cumulativeCashFlow || 0);
+
+  // formatted display helpers
+  const toMillions = (v) => (v || 0) / 1_000_000;
+  const formatNumber = (value, decimals = 2) =>
+    Number(value ?? 0).toLocaleString("en-IN", {
+      minimumFractionDigits: decimals,
+      maximumFractionDigits: decimals,
+    });
+  const npvDisplay = formatNumber(npvRaw, 2);
+
+  const irrDisplay = `${formatNumber(irrRaw, 1)}%`;
+
+  const eurDisplay = `${formatNumber(eurRaw, 2)} MMboe`;
+
+  const paybackDisplay = paybackMonth ? `Month ${paybackMonth}` : "N/A";
+
+  const totalOpexDisplay = `${formatNumber((totalOpexRaw), 2)}`;
+
+  const totalTaxDisplay = `${formatNumber((totalTaxRaw), 2)}`;
+
+  const netCFDisplay = `${formatNumber((netCashFlowRaw), 2)}`;
+
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-end">
-        <button
-          onClick={() => setOpenEdit(true)}
-          className="px-3 py-2 rounded-lg text-sm font-medium bg-blue-600 text-white hover:bg-blue-700"
-        >
-          Edit your parameters
-        </button>
+      {/* KPI Strip */}
+      <div className="bg-white/80 rounded-2xl shadow-md border border-slate-100 p-6">
+        <div className="flex items-center justify-end">
+          <button
+            onClick={() => setOpenEdit(true)}
+            className="px-3 py-2 rounded-lg text-sm font-medium bg-blue-600 text-white hover:bg-blue-700"
+          >
+            Edit your parameters
+          </button>
+        </div>
+        <h3 className="text-xs font-semibold tracking-[0.12em] uppercase text-slate-500 mb-4">
+          Economic KPIs
+        </h3>
+        <div className="grid gap-4 md:grid-cols-4 lg:grid-cols-7">
+          <SumCard
+            title="NPV"
+            value={`$${npvDisplay}`}
+            accent="text-indigo-600"
+          />
+          <SumCard title="IRR" value={irrDisplay} accent="text-emerald-600" />
+          <SumCard title="EUR" value={eurDisplay} accent="text-sky-600" />
+          <SumCard
+            title="Payback Period"
+            value={paybackDisplay}
+            accent="text-amber-600"
+          />
+          <SumCard
+            title="Total OPEX"
+            value={totalOpexDisplay}
+            accent="text-rose-600"
+          />
+          <SumCard
+            title="Total Tax"
+            value={totalTaxDisplay}
+            accent="text-orange-600"
+          />
+          <SumCard
+            title="Net Cash Flow"
+            value={netCFDisplay}
+            accent="text-blue-600"
+          />
+        </div>
       </div>
-      {/* Summary Cards */}
-      <div className="grid md:grid-cols-4 gap-4">
-        <SumCard
-          title="Total Revenue"
-          value={`$${(
-            economicData.reduce((s, d) => s + d.revenue, 0) / 1_000_000
-          ).toFixed(2)}M`}
-          color="text-green-600"
-        />
-        <SumCard
-          title="Total OPEX"
-          value={`$${(
-            economicData.reduce((s, d) => s + d.opex, 0) / 1_000_000
-          ).toFixed(2)}M`}
-          color="text-red-600"
-        />
-        <SumCard
-          title="Total Taxes"
-          value={`$${(
-            economicData.reduce((s, d) => s + d.taxes, 0) / 1_000_000
-          ).toFixed(2)}M`}
-          color="text-orange-600"
-        />
-        <SumCard
-          title="Net Cash Flow"
-          value={`$${(
-            economicData[economicData.length - 1].cumulativeCashFlow / 1_000_000
-          ).toFixed(2)}M`}
-          color="text-blue-600"
-        />
-      </div>
+
       {/* Monthly Cash Flow */}
       <div className="bg-white rounded-xl shadow-lg p-6">
         <h3 className="text-lg font-bold text-gray-900 mb-4">
@@ -84,6 +130,7 @@ export default function Economic() {
           </BarChart>
         </ResponsiveContainer>
       </div>
+
       {/* NPV Buildup */}
       <div className="bg-white rounded-xl shadow-lg p-6">
         <h3 className="text-lg font-bold text-gray-900 mb-4">
@@ -107,6 +154,7 @@ export default function Economic() {
           </AreaChart>
         </ResponsiveContainer>
       </div>
+
       {/* Sensitivity */}
       <div className="bg-white rounded-xl shadow-lg p-6">
         <h3 className="text-lg font-bold text-gray-900 mb-4">
@@ -120,7 +168,8 @@ export default function Economic() {
             <div className="space-y-2">
               {[-20, -10, 0, 10, 20].map((pct) => {
                 const adjustedPrice = economicParams.oilPrice * (1 + pct / 100);
-                const npvImpact = kpis ? kpis.npv * (1 + (pct * 0.4) / 100) : 0;
+                const baseNpvM = toMillions(kpis ? kpis.npv : npvRaw);
+                const npvImpact = baseNpvM * (1 + (pct * 0.4) / 100);
                 return (
                   <div
                     key={pct}
@@ -155,10 +204,10 @@ export default function Economic() {
               {[-15, -10, 0, 10, 15].map((pct) => {
                 const adjustedCapex =
                   economicParams.totalCAPEX * (1 + pct / 100);
-                const npvImpact = kpis
-                  ? kpis.npv -
-                    (economicParams.totalCAPEX * pct) / 100 / 1_000_000
-                  : 0;
+                const baseNpvM = toMillions(kpis ? kpis.npv : npvRaw);
+                const npvImpact =
+                  baseNpvM -
+                  (economicParams.totalCAPEX * pct) / 100 / 1_000_000;
                 return (
                   <div
                     key={pct}
@@ -187,16 +236,19 @@ export default function Economic() {
           </div>
         </div>
       </div>
+
       <ExecParamsModal open={openEdit} onClose={() => setOpenEdit(false)} />
     </div>
   );
 }
 
-function SumCard({ title, value, color }) {
+function SumCard({ title, value, accent = "text-slate-900" }) {
   return (
-    <div className="bg-white rounded-xl shadow-lg p-6">
-      <p className="text-sm text-gray-600 mb-2">{title}</p>
-      <p className={`text-3xl font-bold ${color}`}>{value}</p>
+    <div className="rounded-xl border border-slate-100 bg-white/90 p-4 shadow-sm hover:shadow-md transition-shadow">
+      <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-1">
+        {title}
+      </p>
+      <p className={`text-xl md:text-2xl font-bold ${accent}`}>{value}</p>
     </div>
   );
 }
