@@ -1,5 +1,4 @@
-
-// import React, { useState, useEffect, useMemo, useRef } from "react";
+// import React, { useState, useMemo, useEffect, useRef } from "react";
 // import { MapPin } from "lucide-react";
 // import {
 //   ResponsiveContainer,
@@ -15,20 +14,21 @@
 // } from "recharts";
 // import { useAlphaWell } from "../../../context/AlphaWellContext";
 
+// // Use the same envs as AlphaWellContext / wellsApi
+// const WELLS_API_BASE =
+//   import.meta.env.VITE_WELLS_API_BASE || "http://54.210.165.50:8003";
+// const WELLS_API_KEY =
+//   import.meta.env.VITE_WELLS_API_KEY || "mqube-wells-ai-2025-access-token";
+
 // export default function Neighborhood() {
 //   const { wellParams, currentUser } = useAlphaWell();
 
 //   // ---------- FORM (LEFT SIDEBAR) ----------
 //   const [form, setForm] = useState({
-//     latitude: wellParams?.latitude ?? 31.8457,
-//     longitude: wellParams?.longitude ?? -102.3676,
+//     latitude: wellParams?.latitude ?? 31.809364,
+//     longitude: wellParams?.longitude ?? -104.049991,
 //     radius_mi: 5,
-//     env_fluid_type: "FRESH WATER",
-//     env_well_type: "OIL",
-//     trajectory: "HORIZONTAL",
-//     env_wellbore_type: "SINGLE BORE",
-//     formation: wellParams?.formation ?? "WOLFCAMP",
-//     initial_date: "2015-01-01",
+//     initial_date: "2020-01-01",
 //   });
 
 //   const handleChange = (field) => (e) =>
@@ -41,62 +41,101 @@
 //   const [kpis, setKpis] = useState(null);
 //   const [wells, setWells] = useState([]);
 //   const [prodMetrics, setProdMetrics] = useState(null);
+
 //   const hasRunOnce = useRef(false);
 
-//   const runAnalysis = async (isInitial = false) => {
+//   const runAnalysis = async () => {
 //     setLoading(true);
-//     if (!isInitial) setError(null);
+//     setError(null);
 
 //     try {
 //       const body = {
-//         user_id: currentUser?.id?.toString() || "web_user",
-//         session_id: "web_session_1",
-//         latitude: parseFloat(form.latitude),
-//         longitude: parseFloat(form.longitude),
-//         radius_mi: parseFloat(form.radius_mi),
-//         env_fluid_type: form.env_fluid_type,
-//         env_well_type: form.env_well_type,
-//         trajectory: form.trajectory,
-//         env_wellbore_type: form.env_wellbore_type,
-//         formation: form.formation,
+//         // match backend expectation exactly
+//         user_id: currentUser?.id ? `user_${currentUser.id}` : "user_123",
+//         session_id: "session_456",
+//         latitude: Number(form.latitude),
+//         longitude: Number(form.longitude),
+//         radius_mi: Number(form.radius_mi),
 //         initial_date: form.initial_date,
 //       };
 
-//       const res = await fetch("/api/neighborhood/analyze", {
+//       console.log("[Neighborhood] request payload:", body);
+
+//       const res = await fetch(`${WELLS_API_BASE}/api/neighborhood/analyze`, {
 //         method: "POST",
-//         headers: { "Content-Type": "application/json" },
+//         headers: {
+//           "Content-Type": "application/json",
+//           "x-api-key": WELLS_API_KEY,
+//         },
 //         body: JSON.stringify(body),
 //       });
 
-//       if (!res.ok) throw new Error(`API error: ${res.status}`);
+//       if (!res.ok) {
+//         throw new Error(`API error: ${res.status}`);
+//       }
 
 //       const json = await res.json();
+//       console.log("[Neighborhood] full API response:", json);
+
 //       setKpis(json.neighborhood_kpis || null);
 
+//       // ---- fetch wells.json ----
 //       if (json.wells_url) {
-//         const wRes = await fetch(json.wells_url);
-//         const wJson = await wRes.json();
-//         setWells(Array.isArray(wJson) ? wJson : []);
-//       } else setWells([]);
+//         try {
+//           console.log("[Neighborhood] wells_url:", json.wells_url);
+//           const wRes = await fetch(json.wells_url);
+//           const wJson = await wRes.json();
+//           console.log(
+//             "[Neighborhood] wells.json raw (first 3 rows):",
+//             Array.isArray(wJson) ? wJson.slice(0, 3) : wJson
+//           );
+//           setWells(Array.isArray(wJson) ? wJson : []);
+//         } catch (wErr) {
+//           console.error("[Neighborhood] wells.json fetch failed:", wErr);
+//           setWells([]);
+//         }
+//       } else {
+//         console.log("[Neighborhood] no wells_url in response");
+//         setWells([]);
+//       }
 
+//       // ---- fetch neighborhood_production_metrics.json ----
 //       if (json.neighborhood_production_metrics_url) {
-//         const mRes = await fetch(json.neighborhood_production_metrics_url);
-//         const mJson = await mRes.json();
-//         setProdMetrics(mJson);
-//       } else setProdMetrics(null);
+//         try {
+//           console.log(
+//             "[Neighborhood] neighborhood_production_metrics_url:",
+//             json.neighborhood_production_metrics_url
+//           );
+//           const mRes = await fetch(json.neighborhood_production_metrics_url);
+//           const mJson = await mRes.json();
+//           console.log("[Neighborhood] raw prodMetrics:", mJson);
+//           setProdMetrics(mJson || null);
+//         } catch (mErr) {
+//           console.error(
+//             "[Neighborhood] production metrics fetch failed:",
+//             mErr
+//           );
+//           setProdMetrics(null);
+//         }
+//       } else {
+//         console.log(
+//           "[Neighborhood] no neighborhood_production_metrics_url in response"
+//         );
+//         setProdMetrics(null);
+//       }
 //     } catch (err) {
-//       console.error(err);
-//       if (!isInitial) setError(err.message || "Something went wrong.");
+//       console.error("[Neighborhood] fetch failed:", err);
+//       setError(err.message || "Something went wrong.");
 //     } finally {
 //       setLoading(false);
 //     }
 //   };
 
-//   // auto-run once when tab opens
+//   // Auto-run once when the tab first opens
 //   useEffect(() => {
 //     if (!hasRunOnce.current) {
 //       hasRunOnce.current = true;
-//       runAnalysis(true);
+//       runAnalysis();
 //     }
 //     // eslint-disable-next-line react-hooks/exhaustive-deps
 //   }, []);
@@ -106,6 +145,22 @@
 //     () => (wells.length ? Object.keys(wells[0]) : []),
 //     [wells]
 //   );
+
+//   // log wells + table columns
+//   useEffect(() => {
+//     console.log("[Neighborhood] wells length:", wells.length);
+//     if (wells.length) {
+//       console.log("[Neighborhood] wellColumns:", wellColumns);
+//       console.log("[Neighborhood] first well row:", wells[0]);
+//     }
+//   }, [wells, wellColumns]);
+
+//   // log kpis
+//   useEffect(() => {
+//     if (kpis) {
+//       console.log("[Neighborhood] kpis:", kpis);
+//     }
+//   }, [kpis]);
 
 //   const formatCell = (key, value) => {
 //     if (value == null || value === "") return "-";
@@ -120,37 +175,56 @@
 //   };
 
 //   const prodChartData = useMemo(() => {
-//     if (!prodMetrics) return [];
+//     if (!prodMetrics) {
+//       console.log(
+//         "[Neighborhood] prodMetrics is null/undefined, chart data empty"
+//       );
+//       return [];
+//     }
+
+//     // make it defensive
 //     const {
-//       months,
-//       oil_avg,
-//       oil_eur,
-//       gas_avg,
-//       gas_eur,
-//       water_avg,
-//       water_eur,
-//       avg_carbon_intensity,
+//       months = [],
+//       oil_avg = [],
+//       oil_eur = [],
+//       gas_avg = [],
+//       gas_eur = [],
+//       water_avg = [],
+//       water_eur = [],
+//       avg_carbon_intensity = [],
 //     } = prodMetrics;
 
-//     return months.map((m, i) => ({
+//     if (!Array.isArray(months)) {
+//       console.warn(
+//         "[Neighborhood] prodMetrics.months is not an array, chart data empty",
+//         months
+//       );
+//       return [];
+//     }
+
+//     const data = months.map((m, i) => ({
 //       month: m,
-//       oil_avg: oil_avg[i],
-//       gas_avg: gas_avg[i],
-//       water_avg: water_avg[i],
-//       oil_eur: oil_eur[i],
-//       gas_eur: gas_eur[i],
-//       water_eur: water_eur[i],
-//       avg_carbon_intensity: avg_carbon_intensity[i],
+//       oil_avg: oil_avg?.[i] ?? null,
+//       gas_avg: gas_avg?.[i] ?? null,
+//       water_avg: water_avg?.[i] ?? null,
+//       oil_eur: oil_eur?.[i] ?? null,
+//       gas_eur: gas_eur?.[i] ?? null,
+//       water_eur: water_eur?.[i] ?? null,
+//       avg_carbon_intensity: avg_carbon_intensity?.[i] ?? null,
 //     }));
+
+//     console.log(
+//       "[Neighborhood] built prodChartData (first 10 points):",
+//       data.slice(0, 10)
+//     );
+//     return data;
 //   }, [prodMetrics]);
 
-//   const getKpi = (k) =>
-//     kpis && Array.isArray(kpis[k]) ? kpis[k][0] : null;
+//   const getKpi = (k) => (kpis && Array.isArray(kpis[k]) ? kpis[k][0] : null);
 
 //   // ================== LAYOUT ==================
 //   return (
 //     <div className="min-h-[70vh]">
-//       {/* THIS flex IS WHAT MAKES LEFT SIDEBAR + RIGHT CONTENT */}
 //       <div className="flex flex-col lg:flex-row gap-6 items-start">
 //         {/* LEFT SIDEBAR */}
 //         <aside className="w-full lg:max-w-sm lg:flex-shrink-0 bg-white rounded-2xl shadow-md border border-slate-100 p-5 lg:sticky lg:top-28">
@@ -158,8 +232,8 @@
 //             Neighborhood Controls
 //           </h2>
 //           <p className="text-xs text-slate-500 mb-4">
-//             Tune the search radius and filters to benchmark your well against
-//             nearby Permian offsets.
+//             Tune the search radius around your target well and pull nearby
+//             offsets for benchmarking.
 //           </p>
 
 //           <div className="space-y-4">
@@ -188,41 +262,6 @@
 //               onChange={handleChange("radius_mi")}
 //             />
 
-//             <LabeledSelect
-//               label="Fluid Type"
-//               value={form.env_fluid_type}
-//               onChange={handleChange("env_fluid_type")}
-//               options={["FRESH WATER", "BRINE", "OTHER"]}
-//             />
-
-//             <LabeledSelect
-//               label="Well Type"
-//               value={form.env_well_type}
-//               onChange={handleChange("env_well_type")}
-//               options={["OIL", "GAS", "OIL & GAS"]}
-//             />
-
-//             <LabeledSelect
-//               label="Trajectory"
-//               value={form.trajectory}
-//               onChange={handleChange("trajectory")}
-//               options={["HORIZONTAL", "VERTICAL", "DIRECTIONAL"]}
-//             />
-
-//             <LabeledSelect
-//               label="Wellbore Type"
-//               value={form.env_wellbore_type}
-//               onChange={handleChange("env_wellbore_type")}
-//               options={["SINGLE BORE", "MULTI BORE"]}
-//             />
-
-//             <LabeledInput
-//               label="Formation"
-//               type="text"
-//               value={form.formation}
-//               onChange={handleChange("formation")}
-//             />
-
 //             <LabeledInput
 //               label="Initial Date"
 //               type="date"
@@ -237,7 +276,7 @@
 //             )}
 
 //             <button
-//               onClick={() => runAnalysis(false)}
+//               onClick={runAnalysis}
 //               disabled={loading}
 //               className="w-full cursor-pointer inline-flex items-center justify-center rounded-lg bg-blue-600 px-4 py-2.5 text-white text-sm font-semibold shadow-sm hover:bg-blue-700 disabled:opacity-60"
 //             >
@@ -246,7 +285,7 @@
 
 //             <p className="text-[11px] text-slate-500">
 //               Adjust inputs and re-run to refresh KPIs, offset wells, and
-//               production graphs in real time.
+//               neighborhood graphs.
 //             </p>
 //           </div>
 //         </aside>
@@ -264,12 +303,13 @@
 //                   title="Avg EUR – Oil"
 //                   value={
 //                     getKpi("avg_eur_oil_production") != null
-//                       ? `${getKpi(
-//                           "avg_eur_oil_production"
-//                         ).toLocaleString(undefined, {
-//                           maximumFractionDigits: 0,
-//                         })} bbl`
-//                       : "-"
+//                       ? `${getKpi("avg_eur_oil_production").toLocaleString(
+//                           undefined,
+//                           {
+//                             maximumFractionDigits: 0,
+//                           }
+//                         )} bbl`
+//                       : "0 bbl"
 //                   }
 //                   color="bg-blue-50"
 //                   tcolor="text-blue-800"
@@ -279,12 +319,13 @@
 //                   title="Avg EUR – Gas"
 //                   value={
 //                     getKpi("avg_eur_gas_production") != null
-//                       ? `${getKpi(
-//                           "avg_eur_gas_production"
-//                         ).toLocaleString(undefined, {
-//                           maximumFractionDigits: 0,
-//                         })} mcf`
-//                       : "-"
+//                       ? `${getKpi("avg_eur_gas_production").toLocaleString(
+//                           undefined,
+//                           {
+//                             maximumFractionDigits: 0,
+//                           }
+//                         )} mcf`
+//                       : "0 mcf"
 //                   }
 //                   color="bg-emerald-50"
 //                   tcolor="text-emerald-800"
@@ -294,12 +335,13 @@
 //                   title="Avg EUR – Water"
 //                   value={
 //                     getKpi("avg_eur_water_production") != null
-//                       ? `${getKpi(
-//                           "avg_eur_water_production"
-//                         ).toLocaleString(undefined, {
-//                           maximumFractionDigits: 0,
-//                         })} bbl`
-//                       : "-"
+//                       ? `${getKpi("avg_eur_water_production").toLocaleString(
+//                           undefined,
+//                           {
+//                             maximumFractionDigits: 0,
+//                           }
+//                         )} bbl`
+//                       : "0 bbl"
 //                   }
 //                   color="bg-teal-50"
 //                   tcolor="text-teal-800"
@@ -310,7 +352,7 @@
 //                   value={
 //                     getKpi("total_wells") != null
 //                       ? getKpi("total_wells").toLocaleString()
-//                       : wells.length
+//                       : wells.length.toString()
 //                   }
 //                   color="bg-purple-50"
 //                   tcolor="text-purple-800"
@@ -319,18 +361,17 @@
 //               </div>
 //             ) : (
 //               <p className="text-sm text-slate-500">
-//                 Initial neighborhood call will populate the KPIs here.
+//                 Run the neighborhood analysis to populate KPIs.
 //               </p>
 //             )}
 //           </div>
 
-//           {/* SPATIAL BENCHMARK – PERMIAN MAP */}
+//           {/* SPATIAL BENCHMARK – MAP CARD */}
 //           <div className="bg-white rounded-2xl shadow-md border border-slate-100 p-6">
 //             <h3 className="text-lg font-bold text-slate-900 mb-4">
 //               Spatial Benchmark Analysis
 //             </h3>
 //             <div className="relative rounded-xl overflow-hidden border border-blue-200 bg-gradient-to-br from-blue-50 to-emerald-50">
-//               {/* Replace with real Permian image asset */}
 //               <img
 //                 src="/images/permian-basin-map.png"
 //                 alt="Permian Basin"
@@ -342,15 +383,8 @@
 //                   Target Well – Permian Basin
 //                 </h4>
 //                 <p className="text-sm text-slate-700">
-//                   {(
-//                     wellParams?.latitude ??
-//                     parseFloat(form.latitude)
-//                   ).toFixed(4)}
-//                   ,{" "}
-//                   {(
-//                     wellParams?.longitude ??
-//                     parseFloat(form.longitude)
-//                   ).toFixed(4)}{" "}
+//                   {(wellParams?.latitude ?? Number(form.latitude)).toFixed(4)},{" "}
+//                   {(wellParams?.longitude ?? Number(form.longitude)).toFixed(4)}{" "}
 //                   • {form.radius_mi} mi radius
 //                 </p>
 //                 <div className="flex items-center justify-center gap-6 mt-5 text-xs">
@@ -384,10 +418,7 @@
 //                   </thead>
 //                   <tbody className="divide-y divide-slate-100">
 //                     {wells.map((w, i) => (
-//                       <tr
-//                         key={w.well_id || i}
-//                         className="hover:bg-slate-50"
-//                       >
+//                       <tr key={w.well_id || i} className="hover:bg-slate-50">
 //                         {wellColumns.map((c) => (
 //                           <td
 //                             key={c}
@@ -403,14 +434,15 @@
 //               </div>
 //             ) : (
 //               <p className="text-sm text-slate-500">
-//                 After a successful neighborhood run, all fields from{" "}
-//                 <code>wells.json</code> will be displayed as columns here.
+//                 Run the analysis to load offset wells from{" "}
+//                 <code>wells.json</code>.
 //               </p>
 //             )}
 //           </div>
 
-//           {/* PRODUCTION & CI CHARTS */}
+//           {/* PRODUCTION & WELL EUR CHARTS */}
 //           <div className="grid md:grid-cols-2 gap-6">
+//             {/* LEFT: EUR build-up */}
 //             <div className="bg-white rounded-2xl shadow-md border border-slate-100 p-6">
 //               <h3 className="text-lg font-bold text-slate-900 mb-4">
 //                 EUR Build-Up – Oil / Gas / Water
@@ -430,54 +462,37 @@
 //                 </ResponsiveContainer>
 //               ) : (
 //                 <p className="text-sm text-slate-500">
-//                   EUR build-up from{" "}
-//                   <code>neighborhood_production_metrics.json</code> will appear
-//                   here after a run.
+//                   Run the analysis to see{" "}
+//                   <code>neighborhood_production_metrics.json</code> results.
 //                 </p>
 //               )}
 //             </div>
 
+//             {/* RIGHT: EUR by well from wells.json */}
 //             <div className="bg-white rounded-2xl shadow-md border border-slate-100 p-6">
 //               <h3 className="text-lg font-bold text-slate-900 mb-4">
-//                 Avg Production & Carbon Intensity
+//                 EUR by Offset Well – Oil / Gas
 //               </h3>
-//               {prodChartData.length ? (
+//               {wells.length ? (
 //                 <ResponsiveContainer width="100%" height={260}>
-//                   <AreaChart data={prodChartData}>
+//                   <BarChart data={wells.slice(0, 20)}>
 //                     <CartesianGrid strokeDasharray="3 3" />
-//                     <XAxis dataKey="month" />
+//                     <XAxis
+//                       dataKey="well_id"
+//                       tick={{ fontSize: 10 }}
+//                       interval={0}
+//                     />
 //                     <YAxis />
 //                     <Tooltip />
 //                     <Legend />
-//                     <Area
-//                       type="monotone"
-//                       dataKey="oil_avg"
-//                       name="Oil Avg"
-//                       fillOpacity={0.3}
-//                     />
-//                     <Area
-//                       type="monotone"
-//                       dataKey="gas_avg"
-//                       name="Gas Avg"
-//                       fillOpacity={0.3}
-//                     />
-//                     <Area
-//                       type="monotone"
-//                       dataKey="water_avg"
-//                       name="Water Avg"
-//                       fillOpacity={0.3}
-//                     />
-//                     <Area
-//                       type="monotone"
-//                       dataKey="avg_carbon_intensity"
-//                       name="Avg CI"
-//                       fillOpacity={0.15}
-//                     />
-//                   </AreaChart>
+//                     <Bar dataKey="cumulative_oil" name="Cumulative Oil (bbl)" />
+//                     <Bar dataKey="cumulative_gas" name="Cumulative Gas (mcf)" />
+//                   </BarChart>
 //                 </ResponsiveContainer>
 //               ) : (
 //                 <p className="text-sm text-slate-500">
-//                   Monthly production + CI trend will be shown here after a run.
+//                   Uses <code>cumulative_oil</code> / <code>cumulative_gas</code>{" "}
+//                   vs <code>well_id</code> from <code>wells.json</code>.
 //                 </p>
 //               )}
 //             </div>
@@ -488,7 +503,7 @@
 //   );
 // }
 
-// /* ------ small helpers ------ */
+// /* ---------- small helpers ---------- */
 
 // function LabeledInput({ label, ...rest }) {
 //   return (
@@ -498,24 +513,6 @@
 //         className="rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
 //         {...rest}
 //       />
-//     </label>
-//   );
-// }
-
-// function LabeledSelect({ label, options, ...rest }) {
-//   return (
-//     <label className="flex flex-col gap-1 text-xs">
-//       <span className="font-medium text-slate-700">{label}</span>
-//       <select
-//         className="rounded-md border border-slate-300 px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-//         {...rest}
-//       >
-//         {options.map((o) => (
-//           <option key={o} value={o}>
-//             {o}
-//           </option>
-//         ))}
-//       </select>
 //     </label>
 //   );
 // }
@@ -538,10 +535,6 @@
 //   );
 // }
 
-// src/components/AlphaWell/tabs/Neighborhood.jsx
-// src/components/AlphaWell/tabs/Neighborhood.jsx
-// src/components/AlphaWell/tabs/Neighborhood.jsx
-// src/components/AlphaWell/tabs/Neighborhood.jsx
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import { MapPin } from "lucide-react";
 import {
@@ -764,8 +757,7 @@ export default function Neighborhood() {
     return data;
   }, [prodMetrics]);
 
-  const getKpi = (k) =>
-    kpis && Array.isArray(kpis[k]) ? kpis[k][0] : null;
+  const getKpi = (k) => (kpis && Array.isArray(kpis[k]) ? kpis[k][0] : null);
 
   // ================== LAYOUT ==================
   return (
@@ -848,11 +840,12 @@ export default function Neighborhood() {
                   title="Avg EUR – Oil"
                   value={
                     getKpi("avg_eur_oil_production") != null
-                      ? `${getKpi(
-                          "avg_eur_oil_production"
-                        ).toLocaleString(undefined, {
-                          maximumFractionDigits: 0,
-                        })} bbl`
+                      ? `${getKpi("avg_eur_oil_production").toLocaleString(
+                          undefined,
+                          {
+                            maximumFractionDigits: 0,
+                          }
+                        )} bbl`
                       : "0 bbl"
                   }
                   color="bg-blue-50"
@@ -863,11 +856,12 @@ export default function Neighborhood() {
                   title="Avg EUR – Gas"
                   value={
                     getKpi("avg_eur_gas_production") != null
-                      ? `${getKpi(
-                          "avg_eur_gas_production"
-                        ).toLocaleString(undefined, {
-                          maximumFractionDigits: 0,
-                        })} mcf`
+                      ? `${getKpi("avg_eur_gas_production").toLocaleString(
+                          undefined,
+                          {
+                            maximumFractionDigits: 0,
+                          }
+                        )} mcf`
                       : "0 mcf"
                   }
                   color="bg-emerald-50"
@@ -878,11 +872,12 @@ export default function Neighborhood() {
                   title="Avg EUR – Water"
                   value={
                     getKpi("avg_eur_water_production") != null
-                      ? `${getKpi(
-                          "avg_eur_water_production"
-                        ).toLocaleString(undefined, {
-                          maximumFractionDigits: 0,
-                        })} bbl`
+                      ? `${getKpi("avg_eur_water_production").toLocaleString(
+                          undefined,
+                          {
+                            maximumFractionDigits: 0,
+                          }
+                        )} bbl`
                       : "0 bbl"
                   }
                   color="bg-teal-50"
@@ -926,9 +921,7 @@ export default function Neighborhood() {
                 </h4>
                 <p className="text-sm text-slate-700">
                   {(wellParams?.latitude ?? Number(form.latitude)).toFixed(4)},{" "}
-                  {(wellParams?.longitude ?? Number(form.longitude)).toFixed(
-                    4
-                  )}{" "}
+                  {(wellParams?.longitude ?? Number(form.longitude)).toFixed(4)}{" "}
                   • {form.radius_mi} mi radius
                 </p>
                 <div className="flex items-center justify-center gap-6 mt-5 text-xs">
@@ -946,27 +939,32 @@ export default function Neighborhood() {
               Offset Wells Analysis
             </h3>
             {wells.length ? (
-              <div className="overflow-x-auto max-h-[380px]">
+              <div className="max-h-[380px] overflow-y-auto overflow-x-auto rounded-2xl border border-slate-100">
                 <table className="min-w-full text-xs md:text-sm">
-                  <thead className="bg-slate-50 sticky top-0">
-                    <tr>
+                  <thead className="bg-slate-50 sticky top-0 z-10">
+                    <tr className="border-b border-slate-200">
                       {wellColumns.map((c) => (
                         <th
                           key={c}
-                          className="px-3 py-2 text-left font-semibold text-slate-700 uppercase tracking-wide"
+                          className="px-3 py-2 text-left font-semibold text-slate-700 uppercase tracking-wide text-[11px]"
                         >
                           {c.replace(/_/g, " ")}
                         </th>
                       ))}
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100">
+                  <tbody>
                     {wells.map((w, i) => (
-                      <tr key={w.well_id || i} className="hover:bg-slate-50">
+                      <tr
+                        key={w.well_id || i}
+                        className={`border-b border-slate-100 ${
+                          i % 2 === 0 ? "bg-sky-50/40" : "bg-white"
+                        } hover:bg-indigo-50/60 transition-colors`}
+                      >
                         {wellColumns.map((c) => (
                           <td
                             key={c}
-                            className="px-3 py-1.5 whitespace-nowrap text-slate-700"
+                            className="px-3 py-1.5 whitespace-nowrap text-slate-700 text-[11px]"
                           >
                             {formatCell(c, w[c])}
                           </td>
@@ -984,63 +982,79 @@ export default function Neighborhood() {
             )}
           </div>
 
-          {/* PRODUCTION & WELL EUR CHARTS */}
-          <div className="grid md:grid-cols-2 gap-6">
-            {/* LEFT: EUR build-up */}
-            <div className="bg-white rounded-2xl shadow-md border border-slate-100 p-6">
-              <h3 className="text-lg font-bold text-slate-900 mb-4">
-                EUR Build-Up – Oil / Gas / Water
-              </h3>
-              {prodChartData.length ? (
-                <ResponsiveContainer width="100%" height={260}>
-                  <BarChart data={prodChartData}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="month" />
-                    <YAxis />
-                    <Tooltip />
-                    <Legend />
-                    <Bar dataKey="oil_eur" name="Oil EUR" />
-                    <Bar dataKey="gas_eur" name="Gas EUR" />
-                    <Bar dataKey="water_eur" name="Water EUR" />
-                  </BarChart>
-                </ResponsiveContainer>
-              ) : (
-                <p className="text-sm text-slate-500">
-                  Run the analysis to see{" "}
-                  <code>neighborhood_production_metrics.json</code> results.
-                </p>
-              )}
-            </div>
+          {/* PRODUCTION CHART (EUR Build-Up) */}
+          <div className="bg-white rounded-2xl shadow-md border border-slate-100 p-6">
+            <h3 className="text-lg font-bold text-slate-900 mb-4">
+              EUR Build-Up – Oil / Gas / Water
+            </h3>
+            {prodChartData.length ? (
+              <ResponsiveContainer width="100%" height={260}>
+                <BarChart data={prodChartData}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="month" />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Bar
+                    dataKey="oil_eur"
+                    name="Oil EUR"
+                    fill="#3b82f6" // blue
+                  />
+                  <Bar
+                    dataKey="gas_eur"
+                    name="Gas EUR"
+                    fill="#22c55e" // green
+                  />
+                  <Bar
+                    dataKey="water_eur"
+                    name="Water EUR"
+                    fill="#f97316" // orange
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <p className="text-sm text-slate-500">
+                Run the analysis to see{" "}
+                <code>neighborhood_production_metrics.json</code> results.
+              </p>
+            )}
+          </div>
 
-            {/* RIGHT: EUR by well from wells.json */}
-            <div className="bg-white rounded-2xl shadow-md border border-slate-100 p-6">
-              <h3 className="text-lg font-bold text-slate-900 mb-4">
-                EUR by Offset Well – Oil / Gas
-              </h3>
-              {wells.length ? (
-                <ResponsiveContainer width="100%" height={260}>
-                  <BarChart data={wells.slice(0, 20)}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis
-                      dataKey="well_id"
-                      tick={{ fontSize: 10 }}
-                      interval={0}
-                    />
-                    <YAxis />
-                    <Tooltip />
-                    <Legend />
-                    <Bar dataKey="cumulative_oil" name="Cumulative Oil (bbl)" />
-                    <Bar dataKey="cumulative_gas" name="Cumulative Gas (mcf)" />
-                  </BarChart>
-                </ResponsiveContainer>
-              ) : (
-                <p className="text-sm text-slate-500">
-                  Uses <code>cumulative_oil</code> /{" "}
-                  <code>cumulative_gas</code> vs <code>well_id</code> from{" "}
-                  <code>wells.json</code>.
-                </p>
-              )}
-            </div>
+          {/* EUR by well from wells.json – NEW ROW */}
+          <div className="bg-white rounded-2xl shadow-md border border-slate-100 p-6">
+            <h3 className="text-lg font-bold text-slate-900 mb-4">
+              EUR by Offset Well – Oil / Gas
+            </h3>
+            {wells.length ? (
+              <ResponsiveContainer width="100%" height={260}>
+                <BarChart data={wells.slice(0, 20)}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis
+                    dataKey="well_id"
+                    tick={{ fontSize: 10 }}
+                    interval={0}
+                  />
+                  <YAxis />
+                  <Tooltip />
+                  <Legend />
+                  <Bar
+                    dataKey="cumulative_oil"
+                    name="Cumulative Oil (bbl)"
+                    fill="#3b82f6"
+                  />
+                  <Bar
+                    dataKey="cumulative_gas"
+                    name="Cumulative Gas (mcf)"
+                    fill="#22c55e"
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <p className="text-sm text-slate-500">
+                Uses <code>cumulative_oil</code> / <code>cumulative_gas</code>{" "}
+                vs <code>well_id</code> from <code>wells.json</code>.
+              </p>
+            )}
           </div>
         </section>
       </div>
