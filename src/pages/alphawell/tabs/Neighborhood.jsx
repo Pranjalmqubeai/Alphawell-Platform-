@@ -1,3 +1,4 @@
+
 // import React, { useState, useMemo, useEffect, useRef } from "react";
 // import { MapPin } from "lucide-react";
 // import {
@@ -402,27 +403,32 @@
 //               Offset Wells Analysis
 //             </h3>
 //             {wells.length ? (
-//               <div className="overflow-x-auto max-h-[380px]">
+//               <div className="max-h-[380px] overflow-y-auto overflow-x-auto rounded-2xl border border-slate-100">
 //                 <table className="min-w-full text-xs md:text-sm">
-//                   <thead className="bg-slate-50 sticky top-0">
-//                     <tr>
+//                   <thead className="bg-slate-50 sticky top-0 z-10">
+//                     <tr className="border-b border-slate-200">
 //                       {wellColumns.map((c) => (
 //                         <th
 //                           key={c}
-//                           className="px-3 py-2 text-left font-semibold text-slate-700 uppercase tracking-wide"
+//                           className="px-3 py-2 text-left font-semibold text-slate-700 uppercase tracking-wide text-[11px]"
 //                         >
 //                           {c.replace(/_/g, " ")}
 //                         </th>
 //                       ))}
 //                     </tr>
 //                   </thead>
-//                   <tbody className="divide-y divide-slate-100">
+//                   <tbody>
 //                     {wells.map((w, i) => (
-//                       <tr key={w.well_id || i} className="hover:bg-slate-50">
+//                       <tr
+//                         key={w.well_id || i}
+//                         className={`border-b border-slate-100 ${
+//                           i % 2 === 0 ? "bg-sky-50/40" : "bg-white"
+//                         } hover:bg-indigo-50/60 transition-colors`}
+//                       >
 //                         {wellColumns.map((c) => (
 //                           <td
 //                             key={c}
-//                             className="px-3 py-1.5 whitespace-nowrap text-slate-700"
+//                             className="px-3 py-1.5 whitespace-nowrap text-slate-700 text-[11px]"
 //                           >
 //                             {formatCell(c, w[c])}
 //                           </td>
@@ -440,62 +446,79 @@
 //             )}
 //           </div>
 
-//           {/* PRODUCTION & WELL EUR CHARTS */}
-//           <div className="grid md:grid-cols-2 gap-6">
-//             {/* LEFT: EUR build-up */}
-//             <div className="bg-white rounded-2xl shadow-md border border-slate-100 p-6">
-//               <h3 className="text-lg font-bold text-slate-900 mb-4">
-//                 EUR Build-Up – Oil / Gas / Water
-//               </h3>
-//               {prodChartData.length ? (
-//                 <ResponsiveContainer width="100%" height={260}>
-//                   <BarChart data={prodChartData}>
-//                     <CartesianGrid strokeDasharray="3 3" />
-//                     <XAxis dataKey="month" />
-//                     <YAxis />
-//                     <Tooltip />
-//                     <Legend />
-//                     <Bar dataKey="oil_eur" name="Oil EUR" />
-//                     <Bar dataKey="gas_eur" name="Gas EUR" />
-//                     <Bar dataKey="water_eur" name="Water EUR" />
-//                   </BarChart>
-//                 </ResponsiveContainer>
-//               ) : (
-//                 <p className="text-sm text-slate-500">
-//                   Run the analysis to see{" "}
-//                   <code>neighborhood_production_metrics.json</code> results.
-//                 </p>
-//               )}
-//             </div>
+//           {/* PRODUCTION CHART (EUR Build-Up) */}
+//           <div className="bg-white rounded-2xl shadow-md border border-slate-100 p-6">
+//             <h3 className="text-lg font-bold text-slate-900 mb-4">
+//               EUR Build-Up – Oil / Gas / Water
+//             </h3>
+//             {prodChartData.length ? (
+//               <ResponsiveContainer width="100%" height={260}>
+//                 <BarChart data={prodChartData}>
+//                   <CartesianGrid strokeDasharray="3 3" />
+//                   <XAxis dataKey="month" />
+//                   <YAxis />
+//                   <Tooltip />
+//                   <Legend />
+//                   <Bar
+//                     dataKey="oil_eur"
+//                     name="Oil EUR"
+//                     fill="#3b82f6" // blue
+//                   />
+//                   <Bar
+//                     dataKey="gas_eur"
+//                     name="Gas EUR"
+//                     fill="#22c55e" // green
+//                   />
+//                   <Bar
+//                     dataKey="water_eur"
+//                     name="Water EUR"
+//                     fill="#f97316" // orange
+//                   />
+//                 </BarChart>
+//               </ResponsiveContainer>
+//             ) : (
+//               <p className="text-sm text-slate-500">
+//                 Run the analysis to see{" "}
+//                 <code>neighborhood_production_metrics.json</code> results.
+//               </p>
+//             )}
+//           </div>
 
-//             {/* RIGHT: EUR by well from wells.json */}
-//             <div className="bg-white rounded-2xl shadow-md border border-slate-100 p-6">
-//               <h3 className="text-lg font-bold text-slate-900 mb-4">
-//                 EUR by Offset Well – Oil / Gas
-//               </h3>
-//               {wells.length ? (
-//                 <ResponsiveContainer width="100%" height={260}>
-//                   <BarChart data={wells.slice(0, 20)}>
-//                     <CartesianGrid strokeDasharray="3 3" />
-//                     <XAxis
-//                       dataKey="well_id"
-//                       tick={{ fontSize: 10 }}
-//                       interval={0}
-//                     />
-//                     <YAxis />
-//                     <Tooltip />
-//                     <Legend />
-//                     <Bar dataKey="cumulative_oil" name="Cumulative Oil (bbl)" />
-//                     <Bar dataKey="cumulative_gas" name="Cumulative Gas (mcf)" />
-//                   </BarChart>
-//                 </ResponsiveContainer>
-//               ) : (
-//                 <p className="text-sm text-slate-500">
-//                   Uses <code>cumulative_oil</code> / <code>cumulative_gas</code>{" "}
-//                   vs <code>well_id</code> from <code>wells.json</code>.
-//                 </p>
-//               )}
-//             </div>
+//           {/* EUR by well from wells.json – NEW ROW */}
+//           <div className="bg-white rounded-2xl shadow-md border border-slate-100 p-6">
+//             <h3 className="text-lg font-bold text-slate-900 mb-4">
+//               EUR by Offset Well – Oil / Gas
+//             </h3>
+//             {wells.length ? (
+//               <ResponsiveContainer width="100%" height={260}>
+//                 <BarChart data={wells.slice(0, 20)}>
+//                   <CartesianGrid strokeDasharray="3 3" />
+//                   <XAxis
+//                     dataKey="well_id"
+//                     tick={{ fontSize: 10 }}
+//                     interval={0}
+//                   />
+//                   <YAxis />
+//                   <Tooltip />
+//                   <Legend />
+//                   <Bar
+//                     dataKey="cumulative_oil"
+//                     name="Cumulative Oil (bbl)"
+//                     fill="#3b82f6"
+//                   />
+//                   <Bar
+//                     dataKey="cumulative_gas"
+//                     name="Cumulative Gas (mcf)"
+//                     fill="#22c55e"
+//                   />
+//                 </BarChart>
+//               </ResponsiveContainer>
+//             ) : (
+//               <p className="text-sm text-slate-500">
+//                 Uses <code>cumulative_oil</code> / <code>cumulative_gas</code>{" "}
+//                 vs <code>well_id</code> from <code>wells.json</code>.
+//               </p>
+//             )}
 //           </div>
 //         </section>
 //       </div>
@@ -534,7 +557,6 @@
 //     </div>
 //   );
 // }
-
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import { MapPin } from "lucide-react";
 import {
@@ -761,10 +783,13 @@ export default function Neighborhood() {
 
   // ================== LAYOUT ==================
   return (
-    <div className="min-h-[70vh]">
-      <div className="flex flex-col lg:flex-row gap-6 items-start">
+    <div className="min-h-[70vh] w-full">
+      {/* Option A responsiveness:
+          - stacked for laptop/tablet/mobile
+          - side-by-side only on xl+ desktops */}
+      <div className="flex flex-col xl:flex-row gap-6 items-start w-full">
         {/* LEFT SIDEBAR */}
-        <aside className="w-full lg:max-w-sm lg:flex-shrink-0 bg-white rounded-2xl shadow-md border border-slate-100 p-5 lg:sticky lg:top-28">
+        <aside className="w-full xl:max-w-sm xl:flex-shrink-0 bg-white rounded-2xl shadow-md border border-slate-100 p-5 xl:sticky xl:top-28">
           <h2 className="text-lg font-semibold text-slate-900 mb-1">
             Neighborhood Controls
           </h2>
@@ -828,23 +853,21 @@ export default function Neighborhood() {
         </aside>
 
         {/* RIGHT CONTENT */}
-        <section className="flex-1 space-y-6">
+        <section className="flex-1 min-w-0 w-full space-y-6">
           {/* KPI SUMMARY */}
           <div className="bg-white rounded-2xl shadow-md border border-slate-100 p-6">
             <h3 className="text-lg font-bold text-slate-900 mb-4">
               Neighborhood Statistical Summary
             </h3>
             {kpis ? (
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-4">
                 <StatCard
                   title="Avg EUR – Oil"
                   value={
                     getKpi("avg_eur_oil_production") != null
                       ? `${getKpi("avg_eur_oil_production").toLocaleString(
                           undefined,
-                          {
-                            maximumFractionDigits: 0,
-                          }
+                          { maximumFractionDigits: 0 }
                         )} bbl`
                       : "0 bbl"
                   }
@@ -858,9 +881,7 @@ export default function Neighborhood() {
                     getKpi("avg_eur_gas_production") != null
                       ? `${getKpi("avg_eur_gas_production").toLocaleString(
                           undefined,
-                          {
-                            maximumFractionDigits: 0,
-                          }
+                          { maximumFractionDigits: 0 }
                         )} mcf`
                       : "0 mcf"
                   }
@@ -874,9 +895,7 @@ export default function Neighborhood() {
                     getKpi("avg_eur_water_production") != null
                       ? `${getKpi("avg_eur_water_production").toLocaleString(
                           undefined,
-                          {
-                            maximumFractionDigits: 0,
-                          }
+                          { maximumFractionDigits: 0 }
                         )} bbl`
                       : "0 bbl"
                   }
@@ -939,32 +958,32 @@ export default function Neighborhood() {
               Offset Wells Analysis
             </h3>
             {wells.length ? (
-              <div className="max-h-[380px] overflow-y-auto overflow-x-auto rounded-2xl border border-slate-100">
-                <table className="min-w-full text-xs md:text-sm">
+              <div className="max-h-[380px] overflow-y-auto overflow-x-auto rounded-xl border border-slate-100">
+                <table className="min-w-max w-full text-xs md:text-sm">
                   <thead className="bg-slate-50 sticky top-0 z-10">
                     <tr className="border-b border-slate-200">
                       {wellColumns.map((c) => (
                         <th
                           key={c}
-                          className="px-3 py-2 text-left font-semibold text-slate-700 uppercase tracking-wide text-[11px]"
+                          className="px-3 py-2 text-left font-semibold text-slate-700 uppercase tracking-wide text-[11px] whitespace-nowrap"
                         >
                           {c.replace(/_/g, " ")}
                         </th>
                       ))}
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody className="divide-y divide-slate-100">
                     {wells.map((w, i) => (
                       <tr
                         key={w.well_id || i}
-                        className={`border-b border-slate-100 ${
+                        className={`${
                           i % 2 === 0 ? "bg-sky-50/40" : "bg-white"
                         } hover:bg-indigo-50/60 transition-colors`}
                       >
                         {wellColumns.map((c) => (
                           <td
                             key={c}
-                            className="px-3 py-1.5 whitespace-nowrap text-slate-700 text-[11px]"
+                            className="px-3 py-1.5 whitespace-nowrap text-slate-700"
                           >
                             {formatCell(c, w[c])}
                           </td>
@@ -982,79 +1001,88 @@ export default function Neighborhood() {
             )}
           </div>
 
-          {/* PRODUCTION CHART (EUR Build-Up) */}
-          <div className="bg-white rounded-2xl shadow-md border border-slate-100 p-6">
-            <h3 className="text-lg font-bold text-slate-900 mb-4">
-              EUR Build-Up – Oil / Gas / Water
-            </h3>
-            {prodChartData.length ? (
-              <ResponsiveContainer width="100%" height={260}>
-                <BarChart data={prodChartData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Bar
-                    dataKey="oil_eur"
-                    name="Oil EUR"
-                    fill="#3b82f6" // blue
-                  />
-                  <Bar
-                    dataKey="gas_eur"
-                    name="Gas EUR"
-                    fill="#22c55e" // green
-                  />
-                  <Bar
-                    dataKey="water_eur"
-                    name="Water EUR"
-                    fill="#f97316" // orange
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-            ) : (
-              <p className="text-sm text-slate-500">
-                Run the analysis to see{" "}
-                <code>neighborhood_production_metrics.json</code> results.
-              </p>
-            )}
-          </div>
+          {/* CHARTS — NEW ROW LAYOUT */}
+          <div className="space-y-6">
+            {/* EUR build-up */}
+            <div className="bg-white rounded-2xl shadow-md border border-slate-100 p-6">
+              <h3 className="text-lg font-bold text-slate-900 mb-4">
+                EUR Build-Up – Oil / Gas / Water
+              </h3>
+              {prodChartData.length ? (
+                <ResponsiveContainer width="100%" height={260}>
+                  <BarChart data={prodChartData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="month" />
+                    <YAxis />
+                    <Tooltip />
+                    <Legend />
+                    <Bar
+                      dataKey="oil_eur"
+                      name="Oil EUR"
+                      fill="#3b82f6"
+                      radius={[4, 4, 0, 0]}
+                    />
+                    <Bar
+                      dataKey="gas_eur"
+                      name="Gas EUR"
+                      fill="#22c55e"
+                      radius={[4, 4, 0, 0]}
+                    />
+                    <Bar
+                      dataKey="water_eur"
+                      name="Water EUR"
+                      fill="#f97316"
+                      radius={[4, 4, 0, 0]}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <p className="text-sm text-slate-500">
+                  Run the analysis to see{" "}
+                  <code>neighborhood_production_metrics.json</code> results.
+                </p>
+              )}
+            </div>
 
-          {/* EUR by well from wells.json – NEW ROW */}
-          <div className="bg-white rounded-2xl shadow-md border border-slate-100 p-6">
-            <h3 className="text-lg font-bold text-slate-900 mb-4">
-              EUR by Offset Well – Oil / Gas
-            </h3>
-            {wells.length ? (
-              <ResponsiveContainer width="100%" height={260}>
-                <BarChart data={wells.slice(0, 20)}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis
-                    dataKey="well_id"
-                    tick={{ fontSize: 10 }}
-                    interval={0}
-                  />
-                  <YAxis />
-                  <Tooltip />
-                  <Legend />
-                  <Bar
-                    dataKey="cumulative_oil"
-                    name="Cumulative Oil (bbl)"
-                    fill="#3b82f6"
-                  />
-                  <Bar
-                    dataKey="cumulative_gas"
-                    name="Cumulative Gas (mcf)"
-                    fill="#22c55e"
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-            ) : (
-              <p className="text-sm text-slate-500">
-                Uses <code>cumulative_oil</code> / <code>cumulative_gas</code>{" "}
-                vs <code>well_id</code> from <code>wells.json</code>.
-              </p>
-            )}
+            {/* EUR by offset well — full-width new row */}
+            <div className="bg-white rounded-2xl shadow-md border border-slate-100 p-6">
+              <h3 className="text-lg font-bold text-slate-900 mb-4">
+                EUR by Offset Well – Oil / Gas
+              </h3>
+              {wells.length ? (
+                <ResponsiveContainer width="100%" height={260}>
+                  <BarChart data={wells.slice(0, 20)}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis
+                      dataKey="well_id"
+                      tick={{ fontSize: 10 }}
+                      interval={0}
+                    />
+                    <YAxis />
+                    <Tooltip />
+                    <Legend />
+                    <Bar
+                      dataKey="cumulative_oil"
+                      name="Cumulative Oil (bbl)"
+                      fill="#3b82f6"
+                      radius={[4, 4, 0, 0]}
+                    />
+                    <Bar
+                      dataKey="cumulative_gas"
+                      name="Cumulative Gas (mcf)"
+                      fill="#22c55e"
+                      radius={[4, 4, 0, 0]}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              ) : (
+                <p className="text-sm text-slate-500">
+                  Uses <code>cumulative_oil</code> /{" "}
+                  <code>cumulative_gas</code> vs <code>well_id</code> from{" "}
+                  <code>wells.json</code>.
+                </p>
+              )}
+            </div>
           </div>
         </section>
       </div>
