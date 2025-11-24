@@ -1,4 +1,3 @@
-
 // import React, { useState, useMemo, useEffect, useRef } from "react";
 // import { MapPin } from "lucide-react";
 // import {
@@ -780,6 +779,135 @@ export default function Neighborhood() {
   }, [prodMetrics]);
 
   const getKpi = (k) => (kpis && Array.isArray(kpis[k]) ? kpis[k][0] : null);
+function SectionWellMap({ wells, targetLat, targetLng, radiusMi }) {
+  // If wells don’t have lat/lng, we still render a nice map with jitter
+  const points = useMemo(() => {
+    const safeWells = Array.isArray(wells) ? wells : [];
+
+    // Extract lat/lng when available
+    const withCoords = safeWells
+      .map((w, i) => {
+        const lat = Number(w.latitude ?? w.lat);
+        const lng = Number(w.longitude ?? w.lng);
+        const has = Number.isFinite(lat) && Number.isFinite(lng);
+        return { ...w, lat, lng, has, i };
+      });
+
+    const hasAnyCoords = withCoords.some((w) => w.has);
+
+    // If any coords exist, normalize to [0,1] box
+    if (hasAnyCoords) {
+      const lats = withCoords.filter(w => w.has).map(w => w.lat);
+      const lngs = withCoords.filter(w => w.has).map(w => w.lng);
+      const minLat = Math.min(...lats), maxLat = Math.max(...lats);
+      const minLng = Math.min(...lngs), maxLng = Math.max(...lngs);
+
+      const latSpan = maxLat - minLat || 1;
+      const lngSpan = maxLng - minLng || 1;
+
+      return withCoords.map((w) => {
+        if (!w.has) {
+          // jitter around target if missing
+          const jLat = targetLat + (Math.random() - 0.5) * 0.02;
+          const jLng = targetLng + (Math.random() - 0.5) * 0.02;
+          const x = (jLng - minLng) / lngSpan;
+          const y = 1 - (jLat - minLat) / latSpan;
+          return { ...w, x, y, isTarget: false };
+        }
+        const x = (w.lng - minLng) / lngSpan;
+        const y = 1 - (w.lat - minLat) / latSpan;
+        return { ...w, x, y, isTarget: false };
+      });
+    }
+
+    // Otherwise: scatter in a circle around target
+    return withCoords.map((w) => {
+      const angle = Math.random() * Math.PI * 2;
+      const r = Math.random() * 0.45;
+      const x = 0.5 + r * Math.cos(angle);
+      const y = 0.5 + r * Math.sin(angle);
+      return { ...w, x, y, isTarget: false };
+    });
+  }, [wells, targetLat, targetLng]);
+
+  const wellCount = wells?.length ?? 0;
+
+  return (
+    <div className="relative w-full rounded-xl border border-slate-200 bg-gradient-to-br from-slate-50 to-sky-50 overflow-hidden">
+      {/* section grid backdrop */}
+      <div
+        className="absolute inset-0 opacity-70"
+        style={{
+          backgroundImage:
+            "linear-gradient(to right, rgba(148,163,184,0.25) 1px, transparent 1px), " +
+            "linear-gradient(to bottom, rgba(148,163,184,0.25) 1px, transparent 1px)",
+          backgroundSize: "60px 60px",
+        }}
+      />
+
+      {/* header band like MineralRights */}
+      <div className="relative z-10 flex items-center justify-between px-4 py-3 border-b border-slate-200 bg-white/80 backdrop-blur">
+        <div className="text-xs text-slate-700">
+          Target: {targetLat.toFixed(4)}, {targetLng.toFixed(4)}
+        </div>
+        <div className="text-xs text-slate-600">
+          Radius: {radiusMi} mi • Wells: {wellCount}
+        </div>
+      </div>
+
+      {/* map area */}
+      <div className="relative h-[320px] w-full">
+        {/* target marker */}
+        <div
+          className="absolute w-4 h-4 rounded-full bg-blue-600 ring-4 ring-blue-200 shadow"
+          style={{
+            left: `50%`,
+            top: `50%`,
+            transform: "translate(-50%, -50%)",
+          }}
+          title="Target well"
+        />
+
+        {points.map((p) => (
+          <div
+            key={p.well_id || p.id || p.i}
+            className="absolute w-3 h-3 rounded-full bg-emerald-500/90 ring-2 ring-white shadow-sm hover:scale-125 transition-transform"
+            style={{
+              left: `${Math.max(2, Math.min(98, p.x * 100))}%`,
+              top: `${Math.max(2, Math.min(98, p.y * 100))}%`,
+              transform: "translate(-50%, -50%)",
+            }}
+            title={
+              `${p.well_id || p.id || "Well"}\n` +
+              `Oil: ${Number(p.cumulative_oil || 0).toLocaleString()} bbl\n` +
+              `Gas: ${Number(p.cumulative_gas || 0).toLocaleString()} mcf`
+            }
+          />
+        ))}
+
+        {/* corner labels to suggest "sections" */}
+        <div className="absolute left-3 top-3 text-[10px] text-slate-500 font-semibold bg-white/70 px-2 py-0.5 rounded">
+          NW Section
+        </div>
+        <div className="absolute right-3 top-3 text-[10px] text-slate-500 font-semibold bg-white/70 px-2 py-0.5 rounded">
+          NE Section
+        </div>
+        <div className="absolute left-3 bottom-3 text-[10px] text-slate-500 font-semibold bg-white/70 px-2 py-0.5 rounded">
+          SW Section
+        </div>
+        <div className="absolute right-3 bottom-3 text-[10px] text-slate-500 font-semibold bg-white/70 px-2 py-0.5 rounded">
+          SE Section
+        </div>
+      </div>
+
+      {/* small footer note */}
+      <div className="relative z-10 px-4 py-2 text-[11px] text-slate-500 bg-white/70 border-t border-slate-200">
+        Map is a relative section view (not a GIS basemap). Points use wells.json
+        latitude/longitude when available.
+      </div>
+    </div>
+  );
+}
 
   // ================== LAYOUT ==================
   return (
@@ -927,28 +1055,38 @@ export default function Neighborhood() {
             <h3 className="text-lg font-bold text-slate-900 mb-4">
               Spatial Benchmark Analysis
             </h3>
-            <div className="relative rounded-xl overflow-hidden border border-blue-200 bg-gradient-to-br from-blue-50 to-emerald-50">
-              <img
-                src="/images/permian-basin-map.png"
-                alt="Permian Basin"
-                className="absolute inset-0 w-full h-full object-cover opacity-35 pointer-events-none"
-              />
-              <div className="relative text-center py-10 px-4">
-                <MapPin className="w-16 h-16 text-blue-600 mx-auto mb-3" />
-                <h4 className="text-xl font-bold text-slate-900 mb-1">
-                  Target Well – Permian Basin
-                </h4>
-                <p className="text-sm text-slate-700">
-                  {(wellParams?.latitude ?? Number(form.latitude)).toFixed(4)},{" "}
-                  {(wellParams?.longitude ?? Number(form.longitude)).toFixed(4)}{" "}
-                  • {form.radius_mi} mi radius
-                </p>
-                <div className="flex items-center justify-center gap-6 mt-5 text-xs">
-                  <LegendDot color="bg-green-500" label="High Performer" />
-                  <LegendDot color="bg-yellow-500" label="Moderate" />
-                  <LegendDot color="bg-red-500" label="Underperformer" />
+            {/* SPATIAL BENCHMARK – MAP CARD (UPDATED) */}
+            <div className="bg-white rounded-2xl shadow-md border border-slate-100 p-6">
+              <div className="flex items-start justify-between gap-4 mb-4">
+                <div>
+                  <h3 className="text-lg font-bold text-slate-900">
+                    Neighborhood Map & Sections
+                  </h3>
+                  <p className="text-xs text-slate-500 mt-1">
+                    Showing wells within {form.radius_mi} mi of the target.
+                  </p>
+                </div>
+
+                <div className="text-right">
+                  <p className="text-[11px] uppercase tracking-wide text-slate-500 font-semibold">
+                    Wells Found
+                  </p>
+                  <p className="text-2xl font-bold text-slate-900">
+                    {(
+                      getKpi("total_wells") ??
+                      wells.length ??
+                      0
+                    ).toLocaleString()}
+                  </p>
                 </div>
               </div>
+
+              <SectionWellMap
+                wells={wells}
+                targetLat={Number(form.latitude)}
+                targetLng={Number(form.longitude)}
+                radiusMi={Number(form.radius_mi)}
+              />
             </div>
           </div>
 
@@ -1077,9 +1215,8 @@ export default function Neighborhood() {
                 </ResponsiveContainer>
               ) : (
                 <p className="text-sm text-slate-500">
-                  Uses <code>cumulative_oil</code> /{" "}
-                  <code>cumulative_gas</code> vs <code>well_id</code> from{" "}
-                  <code>wells.json</code>.
+                  Uses <code>cumulative_oil</code> / <code>cumulative_gas</code>{" "}
+                  vs <code>well_id</code> from <code>wells.json</code>.
                 </p>
               )}
             </div>
