@@ -506,56 +506,139 @@ export default function Production() {
         </div>
       </div>
 
-      {/* Production Forecast Simulation */}
-      <div className="bg-white rounded-2xl shadow-lg p-6">
-        <div className="flex items-center justify-between mb-4">
+      {/* Production Forecast Simulation – separate charts with units */}
+      <div className="bg-white rounded-2xl shadow-lg p-6 space-y-8">
+        <div className="flex items-center justify-between">
           <h2 className="text-2xl font-bold text-gray-900">
             Production Forecast Simulation
           </h2>
         </div>
 
-        <ResponsiveContainer width="100%" height={400}>
-          <LineChart data={derivedSeries.filter((_, i) => i % 2 === 0)}>
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis
-              dataKey="month"
-              tick={{ fontSize: 12 }}
-              label={{ value: "Month", position: "insideBottom", offset: -5 }}
-            />
-            <YAxis tick={{ fontSize: 12 }} />
-            <Tooltip
-              formatter={(v, n) => [
-                formatNumber(v, 0),
-                n === "oil" ? "Oil (bbl/mo)" : n === "gas" ? "Gas (mcf/mo)" : "Water (bbl/mo)",
-              ]}
-            />
-            <Legend />
-            <Line
-              type="monotone"
-              dataKey="oil"
-              stroke="#f97316"
-              strokeWidth={2}
-              name="Oil (bbl/mo)"
-              dot={false}
-            />
-            <Line
-              type="monotone"
-              dataKey="gas"
-              stroke="#8b5cf6"
-              strokeWidth={2}
-              name="Gas (mcf/mo)"
-              dot={false}
-            />
-            <Line
-              type="monotone"
-              dataKey="water"
-              stroke="#3b82f6"
-              strokeWidth={2}
-              name="Water (bbl/mo)"
-              dot={false}
-            />
-          </LineChart>
-        </ResponsiveContainer>
+        {/* Oil */}
+        <div>
+          <h3 className="text-sm font-semibold text-slate-800 mb-2">
+            Oil Rate (bbl/mo)
+          </h3>
+          <ResponsiveContainer width="100%" height={260}>
+            <LineChart data={derivedSeries.filter((_, i) => i % 2 === 0)}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis
+                dataKey="month"
+                tick={{ fontSize: 12 }}
+                label={{
+                  value: "Month",
+                  position: "insideBottom",
+                  offset: -5,
+                }}
+              />
+              <YAxis
+                tick={{ fontSize: 12 }}
+                label={{
+                  value: "Oil Rate (bbl/mo)",
+                  angle: -90,
+                  position: "insideLeft",
+                  offset: 10,
+                }}
+              />
+              <Tooltip
+                formatter={(v) => [formatNumber(v, 0), "Oil (bbl/mo)"]}
+              />
+              <Legend />
+              <Line
+                type="monotone"
+                dataKey="oil"
+                stroke="#f97316"
+                strokeWidth={2}
+                name="Oil (bbl/mo)"
+                dot={false}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+
+        {/* Gas */}
+        <div>
+          <h3 className="text-sm font-semibold text-slate-800 mb-2">
+            Gas Rate (mcf/mo)
+          </h3>
+          <ResponsiveContainer width="100%" height={260}>
+            <LineChart data={derivedSeries.filter((_, i) => i % 2 === 0)}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis
+                dataKey="month"
+                tick={{ fontSize: 12 }}
+                label={{
+                  value: "Month",
+                  position: "insideBottom",
+                  offset: -5,
+                }}
+              />
+              <YAxis
+                tick={{ fontSize: 12 }}
+                label={{
+                  value: "Gas Rate (mcf/mo)",
+                  angle: -90,
+                  position: "insideLeft",
+                  offset: 10,
+                }}
+              />
+              <Tooltip
+                formatter={(v) => [formatNumber(v, 0), "Gas (mcf/mo)"]}
+              />
+              <Legend />
+              <Line
+                type="monotone"
+                dataKey="gas"
+                stroke="#8b5cf6"
+                strokeWidth={2}
+                name="Gas (mcf/mo)"
+                dot={false}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+
+        {/* Water */}
+        <div>
+          <h3 className="text-sm font-semibold text-slate-800 mb-2">
+            Water Rate (bbl/mo)
+          </h3>
+          <ResponsiveContainer width="100%" height={260}>
+            <LineChart data={derivedSeries.filter((_, i) => i % 2 === 0)}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis
+                dataKey="month"
+                tick={{ fontSize: 12 }}
+                label={{
+                  value: "Month",
+                  position: "insideBottom",
+                  offset: -5,
+                }}
+              />
+              <YAxis
+                tick={{ fontSize: 12 }}
+                label={{
+                  value: "Water Rate (bbl/mo)",
+                  angle: -90,
+                  position: "insideLeft",
+                  offset: 10,
+                }}
+              />
+              <Tooltip
+                formatter={(v) => [formatNumber(v, 0), "Water (bbl/mo)"]}
+              />
+              <Legend />
+              <Line
+                type="monotone"
+                dataKey="water"
+                stroke="#3b82f6"
+                strokeWidth={2}
+                name="Water (bbl/mo)"
+                dot={false}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
       </div>
 
       {/* Cumulative Production (combined oil + gas via adding monthly values) */}
@@ -572,7 +655,15 @@ export default function Production() {
               tick={{ fontSize: 12 }}
               label={{ value: "Month", position: "insideBottom", offset: -5 }}
             />
-            <YAxis tick={{ fontSize: 12 }} />
+            <YAxis
+              tick={{ fontSize: 12 }}
+              label={{
+                value: "Cumulative (oil + gas)",
+                angle: -90,
+                position: "insideLeft",
+                offset: 10,
+              }}
+            />
             <Tooltip
               formatter={(v) => [formatNumber(v, 0), "Cumulative (oil+gas)"]}
             />
@@ -606,6 +697,12 @@ export default function Production() {
             <YAxis
               tick={{ fontSize: 12 }}
               domain={["auto", "auto"]}
+              label={{
+                value: "Water Cut (%)",
+                angle: -90,
+                position: "insideLeft",
+                offset: 10,
+              }}
               tickFormatter={(v) =>
                 waterCutIsFraction ? `${(v * 100).toFixed(0)}%` : `${v.toFixed(0)}%`
               }

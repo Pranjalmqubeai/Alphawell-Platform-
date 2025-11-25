@@ -613,7 +613,7 @@ export default function ExecutiveSummary() {
       <div className="grid md:grid-cols-2 gap-6">
         <div className="bg-white rounded-xl shadow-lg p-6">
           <h3 className="text-lg font-bold mb-4">
-            Production Decline Preview (S3)
+            Production Decline Preview 
           </h3>
 
           <ResponsiveContainer width="100%" height={300}>
@@ -648,7 +648,7 @@ export default function ExecutiveSummary() {
         ===================================================================== */}
         <div className="bg-white rounded-xl shadow-lg p-6">
           <h3 className="text-lg font-bold mb-4">
-            Cumulative Cash Flow (S3)
+            Cumulative Cash Flow 
           </h3>
 
           <ResponsiveContainer width="100%" height={300}>

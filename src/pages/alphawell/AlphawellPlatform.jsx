@@ -1,3 +1,230 @@
+// import React, { useEffect, useState } from "react";
+// import {
+//   Save,
+//   LogOut,
+//   BarChart3,
+//   Map,
+//   Calculator,
+//   FileText,
+//   ChevronRight,
+//   CheckCircle,
+// } from "lucide-react";
+// import { useAlphaWell } from "../../context/AlphaWellContext";
+// import StartScreen from "./StartScreen";
+// import InputConfig from "./InputConfig";
+// import Neighborhood from "./tabs/Neighborhood";
+// import Economic from "./tabs/Economic";
+// import Production from "./tabs/Production";
+// import ExecutiveSummary from "./tabs/ExecutiveSummary";
+
+// export default function AlphaWellPlatform() {
+//   const {
+//     activeTab,
+//     setActiveTab,
+//     analyzed,
+//     logout,
+//     wellParams,
+//     saveReport,
+//     currentUser,
+//     lastApiResponse,
+//     lastApiError,
+//   } = useAlphaWell();
+
+//   const [showSaveToast, setShowSaveToast] = useState(false);
+
+//   if (activeTab === "start") return <StartScreen />;
+//   if (activeTab === "input") return <InputConfig />;
+
+//   const tabs = [
+//     { id: "executive", label: "Executive Summary", icon: BarChart3 },
+//     { id: "neighborhood", label: "Neighborhood", icon: Map },
+//     { id: "production", label: "Production Forecast", icon: BarChart3 },
+//     { id: "economic", label: "Economic Forecast ", icon: Calculator },
+//   ];
+
+//   // Trigger ExecutiveSummary to export PDF (fires a window event the tab listens to)
+//   const handlePdf = () => {
+//     if (activeTab !== "executive") {
+//       setActiveTab("executive");
+//       setTimeout(
+//         () => window.dispatchEvent(new CustomEvent("aw-export-exec-pdf")),
+//         250
+//       );
+//     } else {
+//       window.dispatchEvent(new CustomEvent("aw-export-exec-pdf"));
+//     }
+//   };
+
+//   const handleSaveScenario = () => {
+//     // Call existing save logic
+//     saveReport(currentUser?.id || 1);
+
+//     // Show toast
+//     setShowSaveToast(true);
+
+//     // Auto-hide after 3 seconds
+//     setTimeout(() => {
+//       setShowSaveToast(false);
+//     }, 3000);
+//   };
+
+//   return (
+//     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 relative">
+//       {/* Save toast */}
+//       {showSaveToast && (
+//         <div className="fixed top-20 right-6 z-40">
+//           <div className="flex items-center gap-3 rounded-xl bg-white shadow-lg border border-emerald-200 px-4 py-3">
+//             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-100">
+//               <CheckCircle className="w-5 h-5 text-emerald-600" />
+//             </div>
+//             <div className="text-sm">
+//               <p className="font-semibold text-emerald-800">
+//                 Decision saved
+//               </p>
+//               <p className="text-emerald-700 text-xs">
+//                 Your scenario and decision have been saved for future reference.
+//               </p>
+//             </div>
+//           </div>
+//         </div>
+//       )}
+
+//       {/* Header */}
+//       <header className="sticky top-0 z-20 w-full bg-white/70 backdrop-blur-xl border-b border-blue-100 shadow-sm">
+//         <div className="w-full px-6 py-4 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+//           {/* Left: breadcrumbs + title */}
+//           <div>
+//             <div className="flex items-center gap-2 text-sm text-slate-500">
+//               <span>Dashboard</span>
+//               <ChevronRight className="w-4 h-4 opacity-70" />
+//               <span>AlphaWell</span>
+//               <ChevronRight className="w-4 h-4 opacity-70" />
+//               <span className="font-medium text-slate-800">Well</span>
+//             </div>
+
+//             <h1 className="mt-2 text-2xl md:text-3xl font-extrabold tracking-tight bg-gradient-to-r from-blue-700 to-indigo-700 bg-clip-text text-transparent">
+//               AlphaWell Intelligence
+//             </h1>
+
+//             <p className="mt-1 text-sm text-slate-600">
+//               Well:{" "}
+//               <span className="font-medium text-slate-900">
+//                 {wellParams.wellId}
+//               </span>{" "}
+//               • {wellParams.formation}
+//               {analyzed ? (
+//                 <span className="ml-2 inline-flex items-center rounded-full bg-emerald-100 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 ring-1 ring-emerald-200">
+//                   analyzed
+//                 </span>
+//               ) : (
+//                 <span className="ml-2 inline-flex items-center rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-700 ring-1 ring-amber-200">
+//                   awaiting input
+//                 </span>
+//               )}
+//             </p>
+//           </div>
+
+//           {/* Right: actions */}
+//           <div className="flex flex-wrap items-center gap-2 md:gap-3">
+//             <button
+//               onClick={handleSaveScenario}
+//               className="cursor-pointer inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 px-4 py-2 text-white font-semibold shadow hover:shadow-lg hover:shadow-blue-500/20 transition-all"
+//             >
+//               <Save className="w-4 h-4" />
+//               Save Scenario
+//             </button>
+
+//             <button
+//               onClick={handlePdf}
+//               className="cursor-pointer inline-flex items-center gap-2 rounded-lg bg-blue-100 px-4 py-2 text-blue-800 font-medium hover:bg-blue-200 transition-all"
+//             >
+//               <FileText className="w-4 h-4" />
+//               Generate PDF
+//             </button>
+
+//             <button
+//               onClick={() => setActiveTab("input")}
+//               className="cursor-pointer inline-flex items-center gap-2 rounded-lg border border-gray-200 px-4 py-2 text-gray-700 font-medium hover:bg-gray-50 transition-all"
+//             >
+//               New Analysis
+//             </button>
+
+//             <button
+//               onClick={logout}
+//               className="cursor-pointer inline-flex items-center gap-2 rounded-lg px-4 py-2 text-gray-600 hover:text-red-600 hover:bg-red-50 transition-colors"
+//             >
+//               <LogOut className="w-4 h-4" />
+//               Sign Out
+//             </button>
+//           </div>
+//         </div>
+
+//         {/* Tabs */}
+//         <nav className="border-t border-blue-50 bg-white/60 backdrop-blur-xl flex flex-wrap gap-2 px-6 py-2">
+//           {tabs.map(({ id, label, icon: Icon }) => {
+//             const active = activeTab === id;
+//             return (
+//               <button
+//                 key={id}
+//                 onClick={() => setActiveTab(id)}
+//                 className={`cursor-pointer flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
+//                   active
+//                     ? "bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-700 border border-blue-200 shadow-sm"
+//                     : "text-gray-600 hover:bg-gray-100 border border-transparent"
+//                 }`}
+//               >
+//                 {Icon && <Icon className="w-4 h-4" />}
+//                 {label}
+//               </button>
+//             );
+//           })}
+//         </nav>
+//       </header>
+
+//       {/* soft blobs */}
+//       <div className="absolute inset-0 pointer-events-none">
+//         <div className="absolute top-40 left-20 w-80 h-80 bg-blue-200 rounded-full mix-blend-multiply blur-3xl opacity-20 animate-blob" />
+//         <div className="absolute bottom-40 right-10 w-96 h-96 bg-indigo-200 rounded-full mix-blend-multiply blur-3xl opacity-20 animate-blob animation-delay-2000" />
+//       </div>
+
+//       {/* Content */}
+//       <main className="relative w-full px-6 py-10 space-y-10">
+//         {activeTab === "executive" && analyzed && <ExecutiveSummary />}
+//         {activeTab === "neighborhood" && <Neighborhood />}
+//         {activeTab === "production" && <Production />}
+//         {activeTab === "economic" && <Economic />}
+
+//         {!analyzed && activeTab === "executive" && (
+//           <div className="rounded-2xl border border-dashed border-gray-300 bg-white/60 p-10 text-center">
+//             <h3 className="text-lg font-semibold text-gray-900">
+//               No analysis yet
+//             </h3>
+//             <p className="mt-1 text-gray-600">
+//               Run Analyze from the Input screen to unlock the Executive Summary.
+//             </p>
+//             <button
+//               onClick={() => setActiveTab("input")}
+//               className="cursor-pointer mt-4 inline-flex items-center rounded-lg bg-blue-600 px-4 py-2 text-white text-sm font-semibold hover:bg-blue-700"
+//             >
+//               Go to Input
+//             </button>
+//           </div>
+//         )}
+//       </main>
+
+//       <style>{`
+//         @keyframes blob {
+//           0%, 100% { transform: translate(0, 0) scale(1); }
+//           33% { transform: translate(30px, -50px) scale(1.1); }
+//           66% { transform: translate(-20px, 20px) scale(0.9); }
+//         }
+//         .animate-blob { animation: blob 12s ease-in-out infinite; }
+//         .animation-delay-2000 { animation-delay: 2s; }
+//       `}</style>
+//     </div>
+//   );
+// }
+
 import React, { useEffect, useState } from "react";
 import {
   Save,
@@ -38,8 +265,10 @@ export default function AlphaWellPlatform() {
   const tabs = [
     { id: "executive", label: "Executive Summary", icon: BarChart3 },
     { id: "neighborhood", label: "Neighborhood", icon: Map },
-    { id: "production", label: "Production", icon: BarChart3 },
-    { id: "economic", label: "Economic", icon: Calculator },
+    { id: "production", label: "Production Forecast", icon: BarChart3 },
+    { id: "economic", label: "Economic Forecast ", icon: Calculator },
+    // 5th tab: Download Result
+    { id: "download", label: "Download Result", icon: FileText },
   ];
 
   // Trigger ExecutiveSummary to export PDF (fires a window event the tab listens to)
@@ -78,9 +307,7 @@ export default function AlphaWellPlatform() {
               <CheckCircle className="w-5 h-5 text-emerald-600" />
             </div>
             <div className="text-sm">
-              <p className="font-semibold text-emerald-800">
-                Decision saved
-              </p>
+              <p className="font-semibold text-emerald-800">Decision saved</p>
               <p className="text-emerald-700 text-xs">
                 Your scenario and decision have been saved for future reference.
               </p>
@@ -193,6 +420,7 @@ export default function AlphaWellPlatform() {
         {activeTab === "neighborhood" && <Neighborhood />}
         {activeTab === "production" && <Production />}
         {activeTab === "economic" && <Economic />}
+        {activeTab === "download" && <DownloadResultTab />}
 
         {!analyzed && activeTab === "executive" && (
           <div className="rounded-2xl border border-dashed border-gray-300 bg-white/60 p-10 text-center">
@@ -221,6 +449,78 @@ export default function AlphaWellPlatform() {
         .animate-blob { animation: blob 12s ease-in-out infinite; }
         .animation-delay-2000 { animation-delay: 2s; }
       `}</style>
+    </div>
+  );
+}
+
+/** ------------- Download Result Tab ------------- */
+
+function DownloadResultTab() {
+  const { lastApiResponse, analyzed, wellParams } = useAlphaWell();
+  const wellId = wellParams?.wellId || "well";
+
+  const handleDownloadJson = () => {
+    if (!lastApiResponse) return;
+    const blob = new Blob([JSON.stringify(lastApiResponse, null, 2)], {
+      type: "application/json",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `alphawell-analysis-${wellId}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  };
+
+  return (
+    <div className="bg-white/90 rounded-2xl shadow-md border border-slate-100 p-6 max-w-3xl">
+      <h2 className="text-2xl font-bold text-slate-900 mb-2">
+        Download Result
+      </h2>
+      <p className="text-sm text-slate-600 mb-4">
+        Export your latest AlphaWell analysis for this well. You can download
+        the raw JSON payload, and use the{" "}
+        <span className="font-medium text-blue-700">Generate PDF</span> button
+        in the header for a formatted executive report.
+      </p>
+
+      {!analyzed || !lastApiResponse ? (
+        <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-6 text-sm text-slate-600">
+          No analysis result is available yet. Run{" "}
+          <span className="font-semibold">Analyze</span> from the Input screen
+          first.
+        </div>
+      ) : (
+        <>
+          <div className="rounded-xl border border-slate-100 bg-slate-50 px-4 py-4 mb-4 text-sm text-slate-700">
+            <p className="font-semibold text-slate-900 mb-1">
+              Current Analysis Context
+            </p>
+            <p>
+              <span className="font-medium">Well ID:</span> {wellId}
+            </p>
+            <p className="mt-1">
+              <span className="font-medium">Payload keys:</span>{" "}
+              {Object.keys(lastApiResponse).join(", ")}
+            </p>
+          </div>
+
+          <button
+            onClick={handleDownloadJson}
+            className="cursor-pointer inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-white text-sm font-semibold shadow hover:bg-blue-700 transition-all"
+          >
+            <FileText className="w-4 h-4" />
+            Download JSON Result
+          </button>
+
+          <p className="mt-3 text-xs text-slate-500">
+            The JSON file contains production, economic, and carbon metrics as
+            returned by the AlphaWell analysis API.
+          </p>
+        </>
+      )}
     </div>
   );
 }

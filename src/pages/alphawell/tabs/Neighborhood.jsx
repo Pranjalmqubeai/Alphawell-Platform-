@@ -1,3 +1,4 @@
+
 // import React, { useState, useMemo, useEffect, useRef } from "react";
 // import { MapPin } from "lucide-react";
 // import {
@@ -9,8 +10,6 @@
 //   Legend,
 //   BarChart,
 //   Bar,
-//   AreaChart,
-//   Area,
 // } from "recharts";
 // import { useAlphaWell } from "../../../context/AlphaWellContext";
 
@@ -222,12 +221,112 @@
 
 //   const getKpi = (k) => (kpis && Array.isArray(kpis[k]) ? kpis[k][0] : null);
 
+//   // -------- production filter (initial / final) for offset wells --------
+//   const [prodStats, setProdStats] = useState(null);
+//   const [initialProdFilter, setInitialProdFilter] = useState(null);
+//   const [finalProdFilter, setFinalProdFilter] = useState(null);
+
+//   const pickNumeric = (w, keys) => {
+//     for (const key of keys) {
+//       if (key in w) {
+//         const v = Number(w[key]);
+//         if (Number.isFinite(v)) return v;
+//       }
+//     }
+//     return null;
+//   };
+
+//   const getInitialProd = (w) =>
+//     pickNumeric(w, [
+//       "initial_production",
+//       "initial_oil_rate",
+//       "initial_rate",
+//       "q_i",
+//     ]);
+
+//   const getFinalProd = (w) =>
+//     pickNumeric(w, [
+//       "final_production",
+//       "final_oil_rate",
+//       "final_rate",
+//       "q_f",
+//     ]);
+
+//   useEffect(() => {
+//     if (!wells.length) {
+//       setProdStats(null);
+//       setInitialProdFilter(null);
+//       setFinalProdFilter(null);
+//       return;
+//     }
+
+//     let minInit = Infinity,
+//       maxInit = -Infinity,
+//       minFin = Infinity,
+//       maxFin = -Infinity;
+
+//     wells.forEach((w) => {
+//       const init = getInitialProd(w);
+//       if (init !== null) {
+//         minInit = Math.min(minInit, init);
+//         maxInit = Math.max(maxInit, init);
+//       }
+//       const fin = getFinalProd(w);
+//       if (fin !== null) {
+//         minFin = Math.min(minFin, fin);
+//         maxFin = Math.max(maxFin, fin);
+//       }
+//     });
+
+//     if (!Number.isFinite(minInit) || !Number.isFinite(maxInit)) {
+//       minInit = 0;
+//       maxInit = 0;
+//     }
+//     if (!Number.isFinite(minFin) || !Number.isFinite(maxFin)) {
+//       minFin = 0;
+//       maxFin = 0;
+//     }
+
+//     setProdStats({
+//       minInit,
+//       maxInit,
+//       minFin,
+//       maxFin,
+//     });
+
+//     setInitialProdFilter(minInit);
+//     setFinalProdFilter(maxFin);
+//   }, [wells]);
+
+//   const filteredWells = useMemo(() => {
+//     if (!wells.length) return [];
+
+//     return wells.filter((w) => {
+//       // wells without metrics are always kept
+//       const init = getInitialProd(w);
+//       const fin = getFinalProd(w);
+
+//       if (
+//         initialProdFilter != null &&
+//         init !== null &&
+//         init < initialProdFilter
+//       ) {
+//         return false;
+//       }
+//       if (finalProdFilter != null && fin !== null && fin > finalProdFilter) {
+//         return false;
+//       }
+//       return true;
+//     });
+//   }, [wells, initialProdFilter, finalProdFilter]);
+
 //   // ================== LAYOUT ==================
 //   return (
-//     <div className="min-h-[70vh]">
-//       <div className="flex flex-col lg:flex-row gap-6 items-start">
+//     <div className="min-h-[70vh] w-full">
+//       {/* stacked on smaller screens, side-by-side on xl+ */}
+//       <div className="flex flex-col xl:flex-row gap-6 items-start w-full">
 //         {/* LEFT SIDEBAR */}
-//         <aside className="w-full lg:max-w-sm lg:flex-shrink-0 bg-white rounded-2xl shadow-md border border-slate-100 p-5 lg:sticky lg:top-28">
+//         <aside className="w-full xl:max-w-sm xl:flex-shrink-0 bg-white rounded-2xl shadow-md border border-slate-100 p-5 xl:sticky xl:top-28">
 //           <h2 className="text-lg font-semibold text-slate-900 mb-1">
 //             Neighborhood Controls
 //           </h2>
@@ -291,23 +390,21 @@
 //         </aside>
 
 //         {/* RIGHT CONTENT */}
-//         <section className="flex-1 space-y-6">
+//         <section className="flex-1 min-w-0 w-full space-y-6">
 //           {/* KPI SUMMARY */}
 //           <div className="bg-white rounded-2xl shadow-md border border-slate-100 p-6">
 //             <h3 className="text-lg font-bold text-slate-900 mb-4">
 //               Neighborhood Statistical Summary
 //             </h3>
 //             {kpis ? (
-//               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+//               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 gap-4">
 //                 <StatCard
 //                   title="Avg EUR – Oil"
 //                   value={
 //                     getKpi("avg_eur_oil_production") != null
 //                       ? `${getKpi("avg_eur_oil_production").toLocaleString(
 //                           undefined,
-//                           {
-//                             maximumFractionDigits: 0,
-//                           }
+//                           { maximumFractionDigits: 0 }
 //                         )} bbl`
 //                       : "0 bbl"
 //                   }
@@ -321,9 +418,7 @@
 //                     getKpi("avg_eur_gas_production") != null
 //                       ? `${getKpi("avg_eur_gas_production").toLocaleString(
 //                           undefined,
-//                           {
-//                             maximumFractionDigits: 0,
-//                           }
+//                           { maximumFractionDigits: 0 }
 //                         )} mcf`
 //                       : "0 mcf"
 //                   }
@@ -337,9 +432,7 @@
 //                     getKpi("avg_eur_water_production") != null
 //                       ? `${getKpi("avg_eur_water_production").toLocaleString(
 //                           undefined,
-//                           {
-//                             maximumFractionDigits: 0,
-//                           }
+//                           { maximumFractionDigits: 0 }
 //                         )} bbl`
 //                       : "0 bbl"
 //                   }
@@ -366,68 +459,151 @@
 //             )}
 //           </div>
 
-//           {/* SPATIAL BENCHMARK – MAP CARD */}
+//           {/* SPATIAL BENCHMARK – MAP CARD (UPDATED) */}
 //           <div className="bg-white rounded-2xl shadow-md border border-slate-100 p-6">
-//             <h3 className="text-lg font-bold text-slate-900 mb-4">
-//               Spatial Benchmark Analysis
-//             </h3>
-//             <div className="relative rounded-xl overflow-hidden border border-blue-200 bg-gradient-to-br from-blue-50 to-emerald-50">
-//               <img
-//                 src="/images/permian-basin-map.png"
-//                 alt="Permian Basin"
-//                 className="absolute inset-0 w-full h-full object-cover opacity-35 pointer-events-none"
-//               />
-//               <div className="relative text-center py-10 px-4">
-//                 <MapPin className="w-16 h-16 text-blue-600 mx-auto mb-3" />
-//                 <h4 className="text-xl font-bold text-slate-900 mb-1">
-//                   Target Well – Permian Basin
-//                 </h4>
-//                 <p className="text-sm text-slate-700">
-//                   {(wellParams?.latitude ?? Number(form.latitude)).toFixed(4)},{" "}
-//                   {(wellParams?.longitude ?? Number(form.longitude)).toFixed(4)}{" "}
-//                   • {form.radius_mi} mi radius
+//             <div className="flex items-start justify-between gap-4 mb-4">
+//               <div>
+//                 <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+//                   <MapPin className="w-4 h-4 text-blue-600" />
+//                   <span>Neighborhood Map & Sections</span>
+//                 </h3>
+//                 <p className="text-xs text-slate-500 mt-1">
+//                   Showing wells within {form.radius_mi} mi of the target.
 //                 </p>
-//                 <div className="flex items-center justify-center gap-6 mt-5 text-xs">
-//                   <LegendDot color="bg-green-500" label="High Performer" />
-//                   <LegendDot color="bg-yellow-500" label="Moderate" />
-//                   <LegendDot color="bg-red-500" label="Underperformer" />
-//                 </div>
+//               </div>
+
+//               <div className="text-right">
+//                 <p className="text-[11px] uppercase tracking-wide text-slate-500 font-semibold">
+//                   Wells Found
+//                 </p>
+//                 <p className="text-2xl font-bold text-slate-900">
+//                   {(
+//                     getKpi("total_wells") ?? wells.length ?? 0
+//                   ).toLocaleString()}
+//                 </p>
 //               </div>
 //             </div>
+
+//             <SectionWellMap
+//               wells={wells}
+//               targetLat={Number(form.latitude)}
+//               targetLng={Number(form.longitude)}
+//               radiusMi={Number(form.radius_mi)}
+//             />
 //           </div>
 
-//           {/* OFFSET WELLS TABLE */}
+//           {/* OFFSET WELLS TABLE + FILTER */}
 //           <div className="bg-white rounded-2xl shadow-md border border-slate-100 p-6">
 //             <h3 className="text-lg font-bold text-slate-900 mb-4">
 //               Offset Wells Analysis
 //             </h3>
-//             {wells.length ? (
-//               <div className="max-h-[380px] overflow-y-auto overflow-x-auto rounded-2xl border border-slate-100">
-//                 <table className="min-w-full text-xs md:text-sm">
+
+//             {prodStats && (prodStats.maxInit > prodStats.minInit ||
+//               prodStats.maxFin > prodStats.minFin) && (
+//               <div className="mb-4 grid md:grid-cols-2 gap-4">
+//                 <div>
+//                   <label className="flex items-center justify-between text-[11px] font-semibold text-slate-600 mb-1">
+//                     <span>Min Initial Production</span>
+//                     <span className="text-slate-800">
+//                       {initialProdFilter != null
+//                         ? initialProdFilter.toLocaleString(undefined, {
+//                             maximumFractionDigits: 0,
+//                           })
+//                         : "All"}
+//                     </span>
+//                   </label>
+//                   <input
+//                     type="range"
+//                     min={prodStats.minInit}
+//                     max={prodStats.maxInit || prodStats.minInit + 1}
+//                     step={
+//                       prodStats.maxInit > prodStats.minInit
+//                         ? Math.max(
+//                             1,
+//                             Math.round(
+//                               (prodStats.maxInit - prodStats.minInit) / 20
+//                             )
+//                           )
+//                         : 1
+//                     }
+//                     value={
+//                       initialProdFilter != null
+//                         ? initialProdFilter
+//                         : prodStats.minInit
+//                     }
+//                     onChange={(e) =>
+//                       setInitialProdFilter(Number(e.target.value))
+//                     }
+//                     className="w-full"
+//                   />
+//                 </div>
+
+//                 <div>
+//                   <label className="flex items-center justify-between text-[11px] font-semibold text-slate-600 mb-1">
+//                     <span>Max Final Production</span>
+//                     <span className="text-slate-800">
+//                       {finalProdFilter != null
+//                         ? finalProdFilter.toLocaleString(undefined, {
+//                             maximumFractionDigits: 0,
+//                           })
+//                         : "All"}
+//                     </span>
+//                   </label>
+//                   <input
+//                     type="range"
+//                     min={prodStats.minFin}
+//                     max={prodStats.maxFin || prodStats.minFin + 1}
+//                     step={
+//                       prodStats.maxFin > prodStats.minFin
+//                         ? Math.max(
+//                             1,
+//                             Math.round(
+//                               (prodStats.maxFin - prodStats.minFin) / 20
+//                             )
+//                           )
+//                         : 1
+//                     }
+//                     value={
+//                       finalProdFilter != null
+//                         ? finalProdFilter
+//                         : prodStats.maxFin
+//                     }
+//                     onChange={(e) =>
+//                       setFinalProdFilter(Number(e.target.value))
+//                     }
+//                     className="w-full"
+//                   />
+//                 </div>
+//               </div>
+//             )}
+
+//             {filteredWells.length ? (
+//               <div className="max-h-[380px] overflow-y-auto overflow-x-auto rounded-xl border border-slate-100">
+//                 <table className="min-w-max w-full text-xs md:text-sm">
 //                   <thead className="bg-slate-50 sticky top-0 z-10">
 //                     <tr className="border-b border-slate-200">
 //                       {wellColumns.map((c) => (
 //                         <th
 //                           key={c}
-//                           className="px-3 py-2 text-left font-semibold text-slate-700 uppercase tracking-wide text-[11px]"
+//                           className="px-3 py-2 text-left font-semibold text-slate-700 uppercase tracking-wide text-[11px] whitespace-nowrap"
 //                         >
 //                           {c.replace(/_/g, " ")}
 //                         </th>
 //                       ))}
 //                     </tr>
 //                   </thead>
-//                   <tbody>
-//                     {wells.map((w, i) => (
+//                   <tbody className="divide-y divide-slate-100">
+//                     {filteredWells.map((w, i) => (
 //                       <tr
 //                         key={w.well_id || i}
-//                         className={`border-b border-slate-100 ${
+//                         className={`${
 //                           i % 2 === 0 ? "bg-sky-50/40" : "bg-white"
 //                         } hover:bg-indigo-50/60 transition-colors`}
 //                       >
 //                         {wellColumns.map((c) => (
 //                           <td
 //                             key={c}
-//                             className="px-3 py-1.5 whitespace-nowrap text-slate-700 text-[11px]"
+//                             className="px-3 py-1.5 whitespace-nowrap text-slate-700"
 //                           >
 //                             {formatCell(c, w[c])}
 //                           </td>
@@ -439,87 +615,283 @@
 //               </div>
 //             ) : (
 //               <p className="text-sm text-slate-500">
-//                 Run the analysis to load offset wells from{" "}
+//                 No wells match the selected production filters. Adjust the
+//                 sliders above or run the analysis to load offset wells from{" "}
 //                 <code>wells.json</code>.
 //               </p>
 //             )}
 //           </div>
 
-//           {/* PRODUCTION CHART (EUR Build-Up) */}
-//           <div className="bg-white rounded-2xl shadow-md border border-slate-100 p-6">
-//             <h3 className="text-lg font-bold text-slate-900 mb-4">
-//               EUR Build-Up – Oil / Gas / Water
-//             </h3>
-//             {prodChartData.length ? (
-//               <ResponsiveContainer width="100%" height={260}>
-//                 <BarChart data={prodChartData}>
-//                   <CartesianGrid strokeDasharray="3 3" />
-//                   <XAxis dataKey="month" />
-//                   <YAxis />
-//                   <Tooltip />
-//                   <Legend />
-//                   <Bar
-//                     dataKey="oil_eur"
-//                     name="Oil EUR"
-//                     fill="#3b82f6" // blue
-//                   />
-//                   <Bar
-//                     dataKey="gas_eur"
-//                     name="Gas EUR"
-//                     fill="#22c55e" // green
-//                   />
-//                   <Bar
-//                     dataKey="water_eur"
-//                     name="Water EUR"
-//                     fill="#f97316" // orange
-//                   />
-//                 </BarChart>
-//               </ResponsiveContainer>
-//             ) : (
-//               <p className="text-sm text-slate-500">
-//                 Run the analysis to see{" "}
-//                 <code>neighborhood_production_metrics.json</code> results.
-//               </p>
-//             )}
-//           </div>
+//           {/* CHARTS — NEW ROW LAYOUT */}
+//           <div className="space-y-6">
+//             {/* EUR build-up */}
+//             <div className="bg-white rounded-2xl shadow-md border border-slate-100 p-6">
+//               <h3 className="text-lg font-bold text-slate-900 mb-4">
+//                 EUR Build-Up – Oil / Gas / Water
+//               </h3>
+//               {prodChartData.length ? (
+//                 <ResponsiveContainer width="100%" height={260}>
+//                   <BarChart data={prodChartData}>
+//                     <CartesianGrid strokeDasharray="3 3" />
+//                     <XAxis dataKey="month" />
+//                     <YAxis />
+//                     <Tooltip />
+//                     <Legend />
+//                     <Bar
+//                       dataKey="oil_eur"
+//                       name="Oil EUR"
+//                       fill="#3b82f6"
+//                       radius={[4, 4, 0, 0]}
+//                     />
+//                     <Bar
+//                       dataKey="gas_eur"
+//                       name="Gas EUR"
+//                       fill="#22c55e"
+//                       radius={[4, 4, 0, 0]}
+//                     />
+//                     <Bar
+//                       dataKey="water_eur"
+//                       name="Water EUR"
+//                       fill="#f97316"
+//                       radius={[4, 4, 0, 0]}
+//                     />
+//                   </BarChart>
+//                 </ResponsiveContainer>
+//               ) : (
+//                 <p className="text-sm text-slate-500">
+//                   Run the analysis to see{" "}
+//                   <code>neighborhood_production_metrics.json</code> results.
+//                 </p>
+//               )}
+//             </div>
 
-//           {/* EUR by well from wells.json – NEW ROW */}
-//           <div className="bg-white rounded-2xl shadow-md border border-slate-100 p-6">
-//             <h3 className="text-lg font-bold text-slate-900 mb-4">
-//               EUR by Offset Well – Oil / Gas
-//             </h3>
-//             {wells.length ? (
-//               <ResponsiveContainer width="100%" height={260}>
-//                 <BarChart data={wells.slice(0, 20)}>
-//                   <CartesianGrid strokeDasharray="3 3" />
-//                   <XAxis
-//                     dataKey="well_id"
-//                     tick={{ fontSize: 10 }}
-//                     interval={0}
-//                   />
-//                   <YAxis />
-//                   <Tooltip />
-//                   <Legend />
-//                   <Bar
-//                     dataKey="cumulative_oil"
-//                     name="Cumulative Oil (bbl)"
-//                     fill="#3b82f6"
-//                   />
-//                   <Bar
-//                     dataKey="cumulative_gas"
-//                     name="Cumulative Gas (mcf)"
-//                     fill="#22c55e"
-//                   />
-//                 </BarChart>
-//               </ResponsiveContainer>
-//             ) : (
-//               <p className="text-sm text-slate-500">
-//                 Uses <code>cumulative_oil</code> / <code>cumulative_gas</code>{" "}
-//                 vs <code>well_id</code> from <code>wells.json</code>.
-//               </p>
-//             )}
+//             {/* EUR by offset well — full-width new row */}
+//             <div className="bg-white rounded-2xl shadow-md border border-slate-100 p-6">
+//               <h3 className="text-lg font-bold text-slate-900 mb-4">
+//                 EUR by Offset Well – Oil / Gas
+//               </h3>
+//               {filteredWells.length ? (
+//                 <ResponsiveContainer width="100%" height={260}>
+//                   <BarChart data={filteredWells.slice(0, 20)}>
+//                     <CartesianGrid strokeDasharray="3 3" />
+//                     <XAxis
+//                       dataKey="well_id"
+//                       tick={{ fontSize: 10 }}
+//                       interval={0}
+//                     />
+//                     <YAxis />
+//                     <Tooltip />
+//                     <Legend />
+//                     <Bar
+//                       dataKey="cumulative_oil"
+//                       name="Cumulative Oil (bbl)"
+//                       fill="#3b82f6"
+//                       radius={[4, 4, 0, 0]}
+//                     />
+//                     <Bar
+//                       dataKey="cumulative_gas"
+//                       name="Cumulative Gas (mcf)"
+//                       fill="#22c55e"
+//                       radius={[4, 4, 0, 0]}
+//                     />
+//                   </BarChart>
+//                 </ResponsiveContainer>
+//               ) : (
+//                 <p className="text-sm text-slate-500">
+//                   Uses <code>cumulative_oil</code> / <code>cumulative_gas</code>{" "}
+//                   vs <code>well_id</code> from <code>wells.json</code>. No wells
+//                   match the current filters.
+//                 </p>
+//               )}
+//             </div>
 //           </div>
 //         </section>
+//       </div>
+//     </div>
+//   );
+// }
+
+// /* ---------- section map (square + zoom + colored dots) ---------- */
+
+// function SectionWellMap({ wells, targetLat, targetLng, radiusMi }) {
+//   const [zoom, setZoom] = useState(1);
+
+//   // If wells don’t have lat/lng, we still render a nice map with jitter
+//   const points = useMemo(() => {
+//     const safeWells = Array.isArray(wells) ? wells : [];
+
+//     // Extract lat/lng when available
+//     const withCoords = safeWells.map((w, i) => {
+//       const lat = Number(w.latitude ?? w.lat);
+//       const lng = Number(w.longitude ?? w.lng);
+//       const has = Number.isFinite(lat) && Number.isFinite(lng);
+//       return { ...w, lat, lng, has, i };
+//     });
+
+//     const hasAnyCoords = withCoords.some((w) => w.has);
+
+//     // If any coords exist, normalize to [0,1] box
+//     if (hasAnyCoords) {
+//       const lats = withCoords.filter((w) => w.has).map((w) => w.lat);
+//       const lngs = withCoords.filter((w) => w.has).map((w) => w.lng);
+//       const minLat = Math.min(...lats),
+//         maxLat = Math.max(...lats);
+//       const minLng = Math.min(...lngs),
+//         maxLng = Math.max(...lngs);
+
+//       const latSpan = maxLat - minLat || 1;
+//       const lngSpan = maxLng - minLng || 1;
+
+//       return withCoords.map((w) => {
+//         let lat = w.lat;
+//         let lng = w.lng;
+
+//         if (!w.has) {
+//           // jitter around target if missing
+//           lat = targetLat + (Math.random() - 0.5) * 0.02;
+//           lng = targetLng + (Math.random() - 0.5) * 0.02;
+//         }
+//         const x = (lng - minLng) / lngSpan;
+//         const y = 1 - (lat - minLat) / latSpan;
+//         return { ...w, x, y };
+//       });
+//     }
+
+//     // Otherwise: scatter in a circle around target
+//     return withCoords.map((w) => {
+//       const angle = Math.random() * Math.PI * 2;
+//       const r = Math.random() * 0.45;
+//       const x = 0.5 + r * Math.cos(angle);
+//       const y = 0.5 + r * Math.sin(angle);
+//       return { ...w, x, y };
+//     });
+//   }, [wells, targetLat, targetLng]);
+
+//   const wellCount = wells?.length ?? 0;
+
+//   const zoomIn = () => setZoom((z) => Math.min(4, z + 0.4));
+//   const zoomOut = () => setZoom((z) => Math.max(1, z - 0.4));
+
+//   return (
+//     <div className="relative w-full rounded-xl border border-slate-200 bg-gradient-to-br from-slate-50 to-sky-50 overflow-hidden">
+//       {/* header */}
+//       <div className="relative z-10 flex items-center justify-between px-4 py-3 border-b border-slate-200 bg-white/80 backdrop-blur">
+//         <div className="text-xs text-slate-700 flex items-center gap-1">
+//           <MapPin className="w-3 h-3 text-blue-600" />
+//           <span>
+//             Target: {targetLat.toFixed(4)}, {targetLng.toFixed(4)}
+//           </span>
+//         </div>
+//         <div className="flex items-center gap-3 text-xs text-slate-600">
+//           <span>
+//             Radius: {radiusMi} mi • Wells: {wellCount}
+//           </span>
+//           <div className="inline-flex items-center gap-1 rounded-full border border-slate-300 bg-white px-2 py-0.5">
+//             <button
+//               type="button"
+//               onClick={zoomOut}
+//               className="w-5 h-5 flex items-center justify-center text-slate-700 text-xs hover:bg-slate-100 rounded-full"
+//             >
+//               –
+//             </button>
+//             <span className="text-[10px] px-1">Zoom</span>
+//             <button
+//               type="button"
+//               onClick={zoomIn}
+//               className="w-5 h-5 flex items-center justify-center text-slate-700 text-xs hover:bg-slate-100 rounded-full"
+//             >
+//               +
+//             </button>
+//           </div>
+//         </div>
+//       </div>
+
+//       {/* square map */}
+//       <div className="relative w-full aspect-square">
+//         <div
+//           className="absolute inset-0"
+//           style={{
+//             transform: `scale(${zoom})`,
+//             transformOrigin: "50% 50%",
+//           }}
+//         >
+//           {/* section grid backdrop */}
+//           <div
+//             className="absolute inset-0 opacity-70"
+//             style={{
+//               backgroundImage:
+//                 "linear-gradient(to right, rgba(148,163,184,0.25) 1px, transparent 1px), " +
+//                 "linear-gradient(to bottom, rgba(148,163,184,0.25) 1px, transparent 1px)",
+//               backgroundSize: "60px 60px",
+//             }}
+//           />
+
+//           {/* target marker */}
+//           <div
+//             className="absolute w-4 h-4 rounded-full bg-blue-600 ring-4 ring-blue-200 shadow"
+//             style={{
+//               left: `50%`,
+//               top: `50%`,
+//               transform: "translate(-50%, -50%)",
+//             }}
+//             title="Target well"
+//           />
+
+//           {/* neighbor wells */}
+//           {points.map((p) => {
+//             const dist = Number(
+//               p.distance_mi ?? p.distance ?? p.dist_mi ?? p.dist
+//             );
+//             const withinRadius = Number.isFinite(dist)
+//               ? dist <= radiusMi
+//               : true;
+
+//             const colorClass = withinRadius
+//               ? "bg-emerald-500/90"
+//               : "bg-slate-400/90";
+
+//             return (
+//               <div
+//                 key={p.well_id || p.id || p.i}
+//                 className={`absolute w-3 h-3 rounded-full ring-2 ring-white shadow-sm hover:scale-125 transition-transform ${colorClass}`}
+//                 style={{
+//                   left: `${Math.max(2, Math.min(98, p.x * 100))}%`,
+//                   top: `${Math.max(2, Math.min(98, p.y * 100))}%`,
+//                   transform: "translate(-50%, -50%)",
+//                 }}
+//                 title={
+//                   `${p.well_id || p.id || "Well"}\n` +
+//                   `Distance: ${
+//                     Number.isFinite(dist) ? dist.toFixed(2) : "N/A"
+//                   } mi\n` +
+//                   `Oil: ${Number(p.cumulative_oil || 0).toLocaleString()} bbl\n` +
+//                   `Gas: ${Number(p.cumulative_gas || 0).toLocaleString()} mcf`
+//                 }
+//               />
+//             );
+//           })}
+
+//           {/* corner labels to suggest "sections" */}
+//           <div className="absolute left-3 top-3 text-[10px] text-slate-500 font-semibold bg-white/70 px-2 py-0.5 rounded">
+//             NW Section
+//           </div>
+//           <div className="absolute right-3 top-3 text-[10px] text-slate-500 font-semibold bg-white/70 px-2 py-0.5 rounded">
+//             NE Section
+//           </div>
+//           <div className="absolute left-3 bottom-3 text-[10px] text-slate-500 font-semibold bg-white/70 px-2 py-0.5 rounded">
+//             SW Section
+//           </div>
+//           <div className="absolute right-3 bottom-3 text-[10px] text-slate-500 font-semibold bg-white/70 px-2 py-0.5 rounded">
+//             SE Section
+//           </div>
+//         </div>
+//       </div>
+
+//       {/* small footer note */}
+//       <div className="relative z-10 px-4 py-2 text-[11px] text-slate-500 bg-white/70 border-t border-slate-200">
+//         Map is a relative section view (not a GIS basemap). Points use
+//         <code> wells.json</code> latitude/longitude when available. Green = in
+//         radius, Grey = outside radius.
 //       </div>
 //     </div>
 //   );
@@ -556,8 +928,8 @@
 //     </div>
 //   );
 // }
+
 import React, { useState, useMemo, useEffect, useRef } from "react";
-import { MapPin } from "lucide-react";
 import {
   ResponsiveContainer,
   CartesianGrid,
@@ -567,8 +939,6 @@ import {
   Legend,
   BarChart,
   Bar,
-  AreaChart,
-  Area,
 } from "recharts";
 import { useAlphaWell } from "../../../context/AlphaWellContext";
 
@@ -704,7 +1074,7 @@ export default function Neighborhood() {
     [wells]
   );
 
-  // log wells + table columns
+  // logs
   useEffect(() => {
     console.log("[Neighborhood] wells length:", wells.length);
     if (wells.length) {
@@ -713,7 +1083,6 @@ export default function Neighborhood() {
     }
   }, [wells, wellColumns]);
 
-  // log kpis
   useEffect(() => {
     if (kpis) {
       console.log("[Neighborhood] kpis:", kpis);
@@ -779,142 +1148,196 @@ export default function Neighborhood() {
   }, [prodMetrics]);
 
   const getKpi = (k) => (kpis && Array.isArray(kpis[k]) ? kpis[k][0] : null);
-function SectionWellMap({ wells, targetLat, targetLng, radiusMi }) {
-  // If wells don’t have lat/lng, we still render a nice map with jitter
-  const points = useMemo(() => {
-    const safeWells = Array.isArray(wells) ? wells : [];
 
-    // Extract lat/lng when available
-    const withCoords = safeWells
-      .map((w, i) => {
+  /* ---------- SECTION WELL MAP ---------- */
+  function SectionWellMap({ wells, targetLat, targetLng, radiusMi }) {
+    const points = useMemo(() => {
+      const safeWells = Array.isArray(wells) ? wells : [];
+
+      const withCoords = safeWells.map((w, i) => {
         const lat = Number(w.latitude ?? w.lat);
         const lng = Number(w.longitude ?? w.lng);
         const has = Number.isFinite(lat) && Number.isFinite(lng);
-        return { ...w, lat, lng, has, i };
+        const distanceMi = Number(w.distance_mi ?? w.distance ?? w.distance_miles);
+        return { ...w, lat, lng, has, i, distanceMi };
       });
 
-    const hasAnyCoords = withCoords.some((w) => w.has);
+      const hasAnyCoords = withCoords.some((w) => w.has);
 
-    // If any coords exist, normalize to [0,1] box
-    if (hasAnyCoords) {
-      const lats = withCoords.filter(w => w.has).map(w => w.lat);
-      const lngs = withCoords.filter(w => w.has).map(w => w.lng);
-      const minLat = Math.min(...lats), maxLat = Math.max(...lats);
-      const minLng = Math.min(...lngs), maxLng = Math.max(...lngs);
+      if (hasAnyCoords) {
+        const lats = withCoords.filter((w) => w.has).map((w) => w.lat);
+        const lngs = withCoords.filter((w) => w.has).map((w) => w.lng);
+        const minLat = Math.min(...lats),
+          maxLat = Math.max(...lats);
+        const minLng = Math.min(...lngs),
+          maxLng = Math.max(...lngs);
 
-      const latSpan = maxLat - minLat || 1;
-      const lngSpan = maxLng - minLng || 1;
+        const latSpan = maxLat - minLat || 1;
+        const lngSpan = maxLng - minLng || 1;
 
+        return withCoords.map((w) => {
+          let x;
+          let y;
+          if (!w.has) {
+            // jitter around target if missing
+            const jLat = targetLat + (Math.random() - 0.5) * 0.02;
+            const jLng = targetLng + (Math.random() - 0.5) * 0.02;
+            x = (jLng - minLng) / lngSpan;
+            y = 1 - (jLat - minLat) / latSpan;
+          } else {
+            x = (w.lng - minLng) / lngSpan;
+            y = 1 - (w.lat - minLat) / latSpan;
+          }
+          const inRadius = Number.isFinite(w.distanceMi)
+            ? w.distanceMi <= radiusMi
+            : true;
+          return { ...w, x, y, inRadius };
+        });
+      }
+
+      // no coords: scatter around center
       return withCoords.map((w) => {
-        if (!w.has) {
-          // jitter around target if missing
-          const jLat = targetLat + (Math.random() - 0.5) * 0.02;
-          const jLng = targetLng + (Math.random() - 0.5) * 0.02;
-          const x = (jLng - minLng) / lngSpan;
-          const y = 1 - (jLat - minLat) / latSpan;
-          return { ...w, x, y, isTarget: false };
-        }
-        const x = (w.lng - minLng) / lngSpan;
-        const y = 1 - (w.lat - minLat) / latSpan;
-        return { ...w, x, y, isTarget: false };
+        const angle = Math.random() * Math.PI * 2;
+        const r = Math.random() * 0.45;
+        const x = 0.5 + r * Math.cos(angle);
+        const y = 0.5 + r * Math.sin(angle);
+        const inRadius = true;
+        return { ...w, x, y, inRadius };
       });
-    }
+    }, [wells, targetLat, targetLng, radiusMi]);
 
-    // Otherwise: scatter in a circle around target
-    return withCoords.map((w) => {
-      const angle = Math.random() * Math.PI * 2;
-      const r = Math.random() * 0.45;
-      const x = 0.5 + r * Math.cos(angle);
-      const y = 0.5 + r * Math.sin(angle);
-      return { ...w, x, y, isTarget: false };
-    });
-  }, [wells, targetLat, targetLng]);
+    const wellCount = wells?.length ?? 0;
 
-  const wellCount = wells?.length ?? 0;
-
-  return (
-    <div className="relative w-full rounded-xl border border-slate-200 bg-gradient-to-br from-slate-50 to-sky-50 overflow-hidden">
-      {/* section grid backdrop */}
-      <div
-        className="absolute inset-0 opacity-70"
-        style={{
-          backgroundImage:
-            "linear-gradient(to right, rgba(148,163,184,0.25) 1px, transparent 1px), " +
-            "linear-gradient(to bottom, rgba(148,163,184,0.25) 1px, transparent 1px)",
-          backgroundSize: "60px 60px",
-        }}
-      />
-
-      {/* header band like MineralRights */}
-      <div className="relative z-10 flex items-center justify-between px-4 py-3 border-b border-slate-200 bg-white/80 backdrop-blur">
-        <div className="text-xs text-slate-700">
-          Target: {targetLat.toFixed(4)}, {targetLng.toFixed(4)}
-        </div>
-        <div className="text-xs text-slate-600">
-          Radius: {radiusMi} mi • Wells: {wellCount}
-        </div>
-      </div>
-
-      {/* map area */}
-      <div className="relative h-[320px] w-full">
-        {/* target marker */}
+    return (
+      <div className="relative w-full rounded-xl border border-slate-200 bg-gradient-to-br from-slate-50 to-sky-50 overflow-hidden">
+        {/* section grid backdrop */}
         <div
-          className="absolute w-4 h-4 rounded-full bg-blue-600 ring-4 ring-blue-200 shadow"
+          className="absolute inset-0 opacity-70"
           style={{
-            left: `50%`,
-            top: `50%`,
-            transform: "translate(-50%, -50%)",
+            backgroundImage:
+              "linear-gradient(to right, rgba(148,163,184,0.25) 1px, transparent 1px), " +
+              "linear-gradient(to bottom, rgba(148,163,184,0.25) 1px, transparent 1px)",
+            backgroundSize: "60px 60px",
           }}
-          title="Target well"
         />
 
-        {points.map((p) => (
+        {/* header band */}
+        <div className="relative z-10 flex items-center justify-between px-4 py-3 border-b border-slate-200 bg-white/80 backdrop-blur">
+          <div className="text-xs text-slate-700">
+            Target: {targetLat.toFixed(4)}, {targetLng.toFixed(4)}
+          </div>
+          <div className="text-xs text-slate-600">
+            Radius: {radiusMi} mi • Wells: {wellCount}
+          </div>
+        </div>
+
+        {/* square map area */}
+        <div className="relative w-full aspect-square">
+          {/* target marker */}
           <div
-            key={p.well_id || p.id || p.i}
-            className="absolute w-3 h-3 rounded-full bg-emerald-500/90 ring-2 ring-white shadow-sm hover:scale-125 transition-transform"
+            className="absolute w-4 h-4 rounded-full bg-indigo-600 ring-4 ring-indigo-200 shadow"
             style={{
-              left: `${Math.max(2, Math.min(98, p.x * 100))}%`,
-              top: `${Math.max(2, Math.min(98, p.y * 100))}%`,
+              left: `50%`,
+              top: `50%`,
               transform: "translate(-50%, -50%)",
             }}
-            title={
-              `${p.well_id || p.id || "Well"}\n` +
-              `Oil: ${Number(p.cumulative_oil || 0).toLocaleString()} bbl\n` +
-              `Gas: ${Number(p.cumulative_gas || 0).toLocaleString()} mcf`
-            }
+            title="Target well"
           />
-        ))}
 
-        {/* corner labels to suggest "sections" */}
-        <div className="absolute left-3 top-3 text-[10px] text-slate-500 font-semibold bg-white/70 px-2 py-0.5 rounded">
-          NW Section
+          {points.map((p) => (
+            <div
+              key={p.well_id || p.id || p.i}
+              className={`absolute w-3 h-3 rounded-full ring-2 ring-white shadow-sm hover:scale-125 transition-transform ${
+                p.inRadius ? "bg-emerald-500/90" : "bg-slate-400/80"
+              }`}
+              style={{
+                left: `${Math.max(2, Math.min(98, p.x * 100))}%`,
+                top: `${Math.max(2, Math.min(98, p.y * 100))}%`,
+                transform: "translate(-50%, -50%)",
+              }}
+              title={
+                `${p.well_id || p.id || "Well"}\n` +
+                `Distance: ${
+                  Number.isFinite(p.distanceMi) ? `${p.distanceMi.toFixed(2)} mi` : "N/A"
+                }\n` +
+                `Oil: ${Number(p.cumulative_oil || 0).toLocaleString()} bbl\n` +
+                `Gas: ${Number(p.cumulative_gas || 0).toLocaleString()} mcf`
+              }
+            />
+          ))}
+
+          {/* “section” labels */}
+          <div className="absolute left-3 top-3 text-[10px] text-slate-500 font-semibold bg-white/70 px-2 py-0.5 rounded">
+            NW Section
+          </div>
+          <div className="absolute right-3 top-3 text-[10px] text-slate-500 font-semibold bg-white/70 px-2 py-0.5 rounded">
+            NE Section
+          </div>
+          <div className="absolute left-3 bottom-3 text-[10px] text-slate-500 font-semibold bg-white/70 px-2 py-0.5 rounded">
+            SW Section
+          </div>
+          <div className="absolute right-3 bottom-3 text-[10px] text-slate-500 font-semibold bg-white/70 px-2 py-0.5 rounded">
+            SE Section
+          </div>
         </div>
-        <div className="absolute right-3 top-3 text-[10px] text-slate-500 font-semibold bg-white/70 px-2 py-0.5 rounded">
-          NE Section
-        </div>
-        <div className="absolute left-3 bottom-3 text-[10px] text-slate-500 font-semibold bg-white/70 px-2 py-0.5 rounded">
-          SW Section
-        </div>
-        <div className="absolute right-3 bottom-3 text-[10px] text-slate-500 font-semibold bg-white/70 px-2 py-0.5 rounded">
-          SE Section
+
+        {/* footer note */}
+        <div className="relative z-10 px-4 py-2 text-[11px] text-slate-500 bg-white/70 border-t border-slate-200">
+          Map is a relative section view (not a GIS basemap). Points use
+          wells.json latitude/longitude when available. Green wells are within
+          the selected radius; grey wells are outside.
         </div>
       </div>
+    );
+  }
 
-      {/* small footer note */}
-      <div className="relative z-10 px-4 py-2 text-[11px] text-slate-500 bg-white/70 border-t border-slate-200">
-        Map is a relative section view (not a GIS basemap). Points use wells.json
-        latitude/longitude when available.
-      </div>
-    </div>
-  );
-}
+  /* ---------- FILTERS: INITIAL / FINAL PRODUCTION DATE ---------- */
+
+  const [initialProdFilter, setInitialProdFilter] = useState("");
+  const [finalProdFilter, setFinalProdFilter] = useState("");
+
+  const parseDateSafe = (val) => {
+    if (!val) return null;
+    const d = new Date(val);
+    return isNaN(d) ? null : d;
+  };
+
+  const getInitialProdDate = (w) =>
+    w.initial_production_date ||
+    w.initial_production_data ||
+    w.initial_production;
+
+  const getFinalProdDate = (w) =>
+    w.final_production_date ||
+    w.final_production_data ||
+    w.final_production;
+
+  const filteredWells = useMemo(() => {
+    if (!wells.length) return [];
+
+    const minDate = parseDateSafe(initialProdFilter);
+    const maxDate = parseDateSafe(finalProdFilter);
+
+    return wells.filter((w) => {
+      const initDate = parseDateSafe(getInitialProdDate(w));
+      const finDate = parseDateSafe(getFinalProdDate(w));
+
+      let ok = true;
+
+      if (minDate && initDate) {
+        ok = ok && initDate >= minDate;
+      }
+      if (maxDate && finDate) {
+        ok = ok && finDate <= maxDate;
+      }
+
+      return ok;
+    });
+  }, [wells, initialProdFilter, finalProdFilter]);
 
   // ================== LAYOUT ==================
   return (
     <div className="min-h-[70vh] w-full">
-      {/* Option A responsiveness:
-          - stacked for laptop/tablet/mobile
-          - side-by-side only on xl+ desktops */}
       <div className="flex flex-col xl:flex-row gap-6 items-start w-full">
         {/* LEFT SIDEBAR */}
         <aside className="w-full xl:max-w-sm xl:flex-shrink-0 bg-white rounded-2xl shadow-md border border-slate-100 p-5 xl:sticky xl:top-28">
@@ -1032,7 +1455,7 @@ function SectionWellMap({ wells, targetLat, targetLng, radiusMi }) {
                   vcolor="text-teal-900"
                 />
                 <StatCard
-                  title="Total Offset Wells"
+                  title="Neighbor Wells"
                   value={
                     getKpi("total_wells") != null
                       ? getKpi("total_wells").toLocaleString()
@@ -1052,50 +1475,60 @@ function SectionWellMap({ wells, targetLat, targetLng, radiusMi }) {
 
           {/* SPATIAL BENCHMARK – MAP CARD */}
           <div className="bg-white rounded-2xl shadow-md border border-slate-100 p-6">
-            <h3 className="text-lg font-bold text-slate-900 mb-4">
-              Spatial Benchmark Analysis
-            </h3>
-            {/* SPATIAL BENCHMARK – MAP CARD (UPDATED) */}
-            <div className="bg-white rounded-2xl shadow-md border border-slate-100 p-6">
-              <div className="flex items-start justify-between gap-4 mb-4">
-                <div>
-                  <h3 className="text-lg font-bold text-slate-900">
-                    Neighborhood Map & Sections
-                  </h3>
-                  <p className="text-xs text-slate-500 mt-1">
-                    Showing wells within {form.radius_mi} mi of the target.
-                  </p>
-                </div>
-
-                <div className="text-right">
-                  <p className="text-[11px] uppercase tracking-wide text-slate-500 font-semibold">
-                    Wells Found
-                  </p>
-                  <p className="text-2xl font-bold text-slate-900">
-                    {(
-                      getKpi("total_wells") ??
-                      wells.length ??
-                      0
-                    ).toLocaleString()}
-                  </p>
-                </div>
+            <div className="flex items-start justify-between gap-4 mb-4">
+              <div>
+                <h3 className="text-lg font-bold text-slate-900">
+                  Neighborhood Map & Sections
+                </h3>
+                <p className="text-xs text-slate-500 mt-1">
+                  Showing wells within {form.radius_mi} mi of the target.
+                </p>
               </div>
 
-              <SectionWellMap
-                wells={wells}
-                targetLat={Number(form.latitude)}
-                targetLng={Number(form.longitude)}
-                radiusMi={Number(form.radius_mi)}
-              />
+              <div className="text-right">
+                <p className="text-[11px] uppercase tracking-wide text-slate-500 font-semibold">
+                  Neighbor Wells
+                </p>
+                <p className="text-2xl font-bold text-slate-900">
+                  {(
+                    getKpi("total_wells") ??
+                    wells.length ??
+                    0
+                  ).toLocaleString()}
+                </p>
+              </div>
             </div>
+
+            <SectionWellMap
+              wells={wells}
+              targetLat={Number(form.latitude)}
+              targetLng={Number(form.longitude)}
+              radiusMi={Number(form.radius_mi)}
+            />
           </div>
 
-          {/* OFFSET WELLS TABLE */}
+          {/* OFFSET WELLS TABLE + DATE FILTERS */}
           <div className="bg-white rounded-2xl shadow-md border border-slate-100 p-6">
             <h3 className="text-lg font-bold text-slate-900 mb-4">
-              Offset Wells Analysis
+              Neighbor Wells
             </h3>
-            {wells.length ? (
+
+            <div className="mb-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+              <LabeledInput
+                label="Initial Production Date ≥"
+                type="date"
+                value={initialProdFilter}
+                onChange={(e) => setInitialProdFilter(e.target.value)}
+              />
+              <LabeledInput
+                label="Final Production Date ≤"
+                type="date"
+                value={finalProdFilter}
+                onChange={(e) => setFinalProdFilter(e.target.value)}
+              />
+            </div>
+
+            {filteredWells.length ? (
               <div className="max-h-[380px] overflow-y-auto overflow-x-auto rounded-xl border border-slate-100">
                 <table className="min-w-max w-full text-xs md:text-sm">
                   <thead className="bg-slate-50 sticky top-0 z-10">
@@ -1111,7 +1544,7 @@ function SectionWellMap({ wells, targetLat, targetLng, radiusMi }) {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
-                    {wells.map((w, i) => (
+                    {filteredWells.map((w, i) => (
                       <tr
                         key={w.well_id || i}
                         className={`${
@@ -1134,7 +1567,7 @@ function SectionWellMap({ wells, targetLat, targetLng, radiusMi }) {
             ) : (
               <p className="text-sm text-slate-500">
                 Run the analysis to load offset wells from{" "}
-                <code>wells.json</code>.
+                <code>wells.json</code>, or relax your date filters.
               </p>
             )}
           </div>
@@ -1215,8 +1648,9 @@ function SectionWellMap({ wells, targetLat, targetLng, radiusMi }) {
                 </ResponsiveContainer>
               ) : (
                 <p className="text-sm text-slate-500">
-                  Uses <code>cumulative_oil</code> / <code>cumulative_gas</code>{" "}
-                  vs <code>well_id</code> from <code>wells.json</code>.
+                  Uses <code>cumulative_oil</code> /{" "}
+                  <code>cumulative_gas</code> vs <code>well_id</code> from{" "}
+                  <code>wells.json</code>.
                 </p>
               )}
             </div>
@@ -1238,15 +1672,6 @@ function LabeledInput({ label, ...rest }) {
         {...rest}
       />
     </label>
-  );
-}
-
-function LegendDot({ color, label }) {
-  return (
-    <div className="flex items-center gap-2">
-      <div className={`w-3 h-3 rounded-full ${color}`} />
-      <span className="text-xs text-slate-700">{label}</span>
-    </div>
   );
 }
 
