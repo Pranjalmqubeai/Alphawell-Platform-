@@ -7,7 +7,7 @@ export default function DownloadResultTab() {
 
   const wellId = wellParams?.wellId || "well";
 
-  // --- Download JSON result ---
+  // --- Download raw JSON result ---
   const handleDownloadJson = () => {
     if (!lastApiResponse) return;
 
@@ -28,6 +28,12 @@ export default function DownloadResultTab() {
     URL.revokeObjectURL(url);
   };
 
+  // --- Trigger ExecutiveSummary PDF export (uses exportElementToPDF internally) ---
+  const handleDownloadExecSummaryPdf = () => {
+    const ev = new Event("aw-export-exec-pdf");
+    window.dispatchEvent(ev);
+  };
+
   return (
     <div className="bg-white/90 rounded-2xl shadow-md border border-slate-100 p-6 max-w-3xl">
       <h2 className="text-2xl font-bold text-slate-900 mb-2">
@@ -36,10 +42,11 @@ export default function DownloadResultTab() {
 
       <p className="text-sm text-slate-600 mb-4">
         Export your latest AlphaWell analysis. Download the raw JSON payload for
-        engineering workflows, or use <span className="font-medium text-blue-700">
-          Generate PDF
+        engineering workflows, or generate a{" "}
+        <span className="font-medium text-blue-700">
+          formatted Executive Summary PDF
         </span>{" "}
-        from the header for a formatted executive report.
+        that matches the on-screen summary.
       </p>
 
       {!analyzed || !lastApiResponse ? (
@@ -66,18 +73,31 @@ export default function DownloadResultTab() {
             </p>
           </div>
 
-          {/* Download JSON Button */}
-          <button
-            onClick={handleDownloadJson}
-            className="cursor-pointer inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-white text-sm font-semibold shadow hover:bg-blue-700 transition-all"
-          >
-            <FileText className="w-4 h-4" />
-            Download JSON Result
-          </button>
+          {/* Buttons Row */}
+          <div className="flex flex-wrap gap-3">
+            {/* Download JSON Button */}
+            <button
+              onClick={handleDownloadJson}
+              className="cursor-pointer inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-white text-sm font-semibold shadow hover:bg-blue-700 transition-all"
+            >
+              <FileText className="w-4 h-4" />
+              Download JSON Result
+            </button>
+
+            {/* Download Executive Summary PDF Button */}
+            <button
+              onClick={handleDownloadExecSummaryPdf}
+              className="cursor-pointer inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-white text-sm font-semibold shadow hover:bg-emerald-700 transition-all"
+            >
+              <FileText className="w-4 h-4" />
+              Download Executive Summary PDF
+            </button>
+          </div>
 
           <p className="mt-3 text-xs text-slate-500">
-            The JSON includes production, economic, carbon, sensitivity, and
-            forecast metrics returned by the AlphaWell API.
+            The Executive Summary PDF captures the same layout you see in the
+            Executive Summary tab: decision banner, KPI tiles, production &
+            cashflow charts, and the monthly summary table.
           </p>
         </>
       )}

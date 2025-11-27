@@ -243,6 +243,7 @@ import Neighborhood from "./tabs/Neighborhood";
 import Economic from "./tabs/Economic";
 import Production from "./tabs/Production";
 import ExecutiveSummary from "./tabs/ExecutiveSummary";
+import DownloadResultTab from "./tabs/DownloadResultTab";
 
 export default function AlphaWellPlatform() {
   const {
@@ -267,8 +268,7 @@ export default function AlphaWellPlatform() {
     { id: "neighborhood", label: "Neighborhood", icon: Map },
     { id: "production", label: "Production Forecast", icon: BarChart3 },
     { id: "economic", label: "Economic Forecast ", icon: Calculator },
-    // 5th tab: Download Result
-    { id: "download", label: "Download Result", icon: FileText },
+    // { id: "download", label: "Download Result", icon: FileText },
   ];
 
   // Trigger ExecutiveSummary to export PDF (fires a window event the tab listens to)
@@ -321,14 +321,6 @@ export default function AlphaWellPlatform() {
         <div className="w-full px-6 py-4 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
           {/* Left: breadcrumbs + title */}
           <div>
-            <div className="flex items-center gap-2 text-sm text-slate-500">
-              <span>Dashboard</span>
-              <ChevronRight className="w-4 h-4 opacity-70" />
-              <span>AlphaWell</span>
-              <ChevronRight className="w-4 h-4 opacity-70" />
-              <span className="font-medium text-slate-800">Well</span>
-            </div>
-
             <h1 className="mt-2 text-2xl md:text-3xl font-extrabold tracking-tight bg-gradient-to-r from-blue-700 to-indigo-700 bg-clip-text text-transparent">
               AlphaWell Intelligence
             </h1>
@@ -362,8 +354,17 @@ export default function AlphaWellPlatform() {
             </button>
 
             <button
-              onClick={handlePdf}
-              className="cursor-pointer inline-flex items-center gap-2 rounded-lg bg-blue-100 px-4 py-2 text-blue-800 font-medium hover:bg-blue-200 transition-all"
+              onClick={() => {
+                if (activeTab === "executive") handlePdf();
+              }}
+              disabled={activeTab !== "executive"}
+              className={`cursor-pointer inline-flex items-center gap-2 rounded-lg px-4 py-2 font-medium transition-all
+    ${
+      activeTab === "executive"
+        ? "bg-blue-100 text-blue-800 hover:bg-blue-200"
+        : "bg-gray-100 text-gray-400 cursor-not-allowed"
+    }
+  `}
             >
               <FileText className="w-4 h-4" />
               Generate PDF
@@ -449,78 +450,6 @@ export default function AlphaWellPlatform() {
         .animate-blob { animation: blob 12s ease-in-out infinite; }
         .animation-delay-2000 { animation-delay: 2s; }
       `}</style>
-    </div>
-  );
-}
-
-/** ------------- Download Result Tab ------------- */
-
-function DownloadResultTab() {
-  const { lastApiResponse, analyzed, wellParams } = useAlphaWell();
-  const wellId = wellParams?.wellId || "well";
-
-  const handleDownloadJson = () => {
-    if (!lastApiResponse) return;
-    const blob = new Blob([JSON.stringify(lastApiResponse, null, 2)], {
-      type: "application/json",
-    });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `alphawell-analysis-${wellId}.json`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-  };
-
-  return (
-    <div className="bg-white/90 rounded-2xl shadow-md border border-slate-100 p-6 max-w-3xl">
-      <h2 className="text-2xl font-bold text-slate-900 mb-2">
-        Download Result
-      </h2>
-      <p className="text-sm text-slate-600 mb-4">
-        Export your latest AlphaWell analysis for this well. You can download
-        the raw JSON payload, and use the{" "}
-        <span className="font-medium text-blue-700">Generate PDF</span> button
-        in the header for a formatted executive report.
-      </p>
-
-      {!analyzed || !lastApiResponse ? (
-        <div className="rounded-xl border border-dashed border-slate-300 bg-slate-50 px-4 py-6 text-sm text-slate-600">
-          No analysis result is available yet. Run{" "}
-          <span className="font-semibold">Analyze</span> from the Input screen
-          first.
-        </div>
-      ) : (
-        <>
-          <div className="rounded-xl border border-slate-100 bg-slate-50 px-4 py-4 mb-4 text-sm text-slate-700">
-            <p className="font-semibold text-slate-900 mb-1">
-              Current Analysis Context
-            </p>
-            <p>
-              <span className="font-medium">Well ID:</span> {wellId}
-            </p>
-            <p className="mt-1">
-              <span className="font-medium">Payload keys:</span>{" "}
-              {Object.keys(lastApiResponse).join(", ")}
-            </p>
-          </div>
-
-          <button
-            onClick={handleDownloadJson}
-            className="cursor-pointer inline-flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-white text-sm font-semibold shadow hover:bg-blue-700 transition-all"
-          >
-            <FileText className="w-4 h-4" />
-            Download JSON Result
-          </button>
-
-          <p className="mt-3 text-xs text-slate-500">
-            The JSON file contains production, economic, and carbon metrics as
-            returned by the AlphaWell analysis API.
-          </p>
-        </>
-      )}
     </div>
   );
 }

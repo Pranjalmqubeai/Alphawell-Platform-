@@ -274,7 +274,534 @@
 //   );
 // }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 // src/components/AlphaWell/tabs/Production.jsx
+
+
+
+// import React, { useState, useEffect, useMemo } from "react";
+// import {
+//   ResponsiveContainer,
+//   LineChart,
+//   Line,
+//   CartesianGrid,
+//   XAxis,
+//   YAxis,
+//   Tooltip,
+//   Legend,
+//   AreaChart,
+//   Area,
+// } from "recharts";
+// import { useAlphaWell } from "../../../context/AlphaWellContext";
+// import ExecParamsModal from "./ExecParamsModal";
+
+// export default function Production() {
+//   const { productionData, wellParams, lastApiResponse } = useAlphaWell();
+//   const [openEdit, setOpenEdit] = useState(false);
+
+//   // new: fetch production data from S3 URL
+//   const [prodUrlData, setProdUrlData] = useState([]);
+//   const [prodUrlLoading, setProdUrlLoading] = useState(false);
+//   const [prodUrlError, setProdUrlError] = useState(null);
+
+//   const productionMetrics = lastApiResponse?.production_metrics || null;
+//   const productionDataUrl = lastApiResponse?.production_data_url || null;
+
+//   useEffect(() => {
+//     let cancelled = false;
+
+//     const fetchProdUrl = async () => {
+//       if (!productionDataUrl) {
+//         setProdUrlData([]);
+//         return;
+//       }
+//       setProdUrlLoading(true);
+//       setProdUrlError(null);
+
+//       try {
+//         const res = await fetch(productionDataUrl);
+//         if (!res.ok) throw new Error(`production_data_url error: ${res.status}`);
+//         const json = await res.json();
+//         if (!cancelled) {
+//           setProdUrlData(Array.isArray(json) ? json : []);
+//         }
+//       } catch (e) {
+//         if (!cancelled) {
+//           setProdUrlError(e.message || "Failed to load production_data_url.json");
+//           setProdUrlData([]);
+//         }
+//       } finally {
+//         if (!cancelled) setProdUrlLoading(false);
+//       }
+//     };
+
+//     fetchProdUrl();
+//     return () => {
+//       cancelled = true;
+//     };
+//   }, [productionDataUrl]);
+
+//   const formatNumber = (value, decimals = 0) => {
+//     if (value === undefined || value === null || Number.isNaN(Number(value)))
+//       return "-";
+//     return Number(value).toLocaleString(undefined, {
+//       maximumFractionDigits: decimals,
+//       minimumFractionDigits: decimals,
+//     });
+//   };
+
+//   /**
+//    * Prefer S3 URL data if available.
+//    * Fallback to context productionData so UI doesn’t break.
+//    */
+//   const derivedSeries = useMemo(() => {
+//     // --- from S3 URL ---
+//     if (prodUrlData?.length) {
+//       let cumCombined = 0;
+
+//       return prodUrlData.map((d) => {
+//         const month = Number(d.month ?? d.time ?? 0);
+//         const oil = Number(d.gross_production_oil_bbls ?? 0);
+//         const gas = Number(d.gross_production_wh_gas_mcf ?? 0);
+//         const water = Number(d.gross_production_water_bbls ?? 0);
+//         const water_cut =
+//           d.water_cut !== undefined && d.water_cut !== null
+//             ? Number(d.water_cut)
+//             : null;
+
+//         cumCombined += oil + gas;
+
+//         return {
+//           month,
+//           date: d.date ? String(d.date).slice(0, 10) : `M${month}`,
+//           oil,
+//           gas,
+//           water,
+//           water_cut,
+//           cumulative_combined: cumCombined,
+//         };
+//       });
+//     }
+
+//     // --- fallback: existing context data ---
+//     if (productionData?.length) {
+//       let cumCombined = 0;
+//       return productionData.map((d, i) => {
+//         const month = i + 1;
+//         const oil = Number(d.oil ?? 0);
+//         const gas = Number(d.gas ?? 0);
+//         const water = Number(d.water ?? 0);
+//         const water_cut =
+//           d.waterCut !== undefined && d.waterCut !== null
+//             ? Number(d.waterCut)
+//             : null;
+
+//         cumCombined += oil + gas;
+
+//         return {
+//           month,
+//           date: d.date || `M${month}`,
+//           oil,
+//           gas,
+//           water,
+//           water_cut,
+//           cumulative_combined: cumCombined,
+//         };
+//       });
+//     }
+
+//     return [];
+//   }, [prodUrlData, productionData]);
+
+//   const hasSeries = derivedSeries.length > 0;
+
+//   // Water cut scaling helper (fraction vs %)
+//   const waterCutIsFraction = useMemo(() => {
+//     if (!hasSeries) return false;
+//     const vals = derivedSeries
+//       .map((d) => d.water_cut)
+//       .filter((v) => v !== null && v !== undefined);
+//     if (!vals.length) return false;
+//     const maxV = Math.max(...vals);
+//     return maxV <= 1.5; // heuristic: <=1 means fraction
+//   }, [derivedSeries, hasSeries]);
+
+//   if (!hasSeries || !productionMetrics) {
+//     return (
+//       <div className="p-6 bg-white rounded-xl shadow text-gray-700">
+//         {prodUrlLoading
+//           ? "Loading production data..."
+//           : "No production data yet. Please run Analyze."}
+//         {prodUrlError && (
+//           <p className="mt-2 text-xs text-red-600">{prodUrlError}</p>
+//         )}
+//       </div>
+//     );
+//   }
+
+//   return (
+//     <div className="space-y-6">
+//       {/* KPI BOXES (peaks hidden) */}
+//       <div className="bg-white/80 rounded-2xl shadow-md border border-slate-100 p-6">
+//         <div className="flex items-center justify-between mb-4">
+//           <h3 className="text-xs font-semibold tracking-[0.12em] uppercase text-slate-500">
+//             Production KPIs
+//           </h3>
+//           <button
+//             onClick={() => setOpenEdit(true)}
+//             className="px-3 py-2 cursor-pointer rounded-lg text-sm font-medium bg-blue-600 text-white hover:bg-blue-700 shadow-sm hover:shadow-md transition-all"
+//           >
+//             Edit your parameters
+//           </button>
+//         </div>
+
+//         <div className="grid gap-4 md:grid-cols-3">
+//           {/* Totals */}
+//           <NumberTile
+//             title="Total Oil"
+//             value={`${formatNumber(productionMetrics.total_oil_eur, 0)} bbl`}
+//             sub="Estimated Ultimate Recovery"
+//             valueColor="text-orange-600"
+//             chipLabel="Oil"
+//             chipColor="bg-orange-50 text-orange-700"
+//           />
+//           <NumberTile
+//             title="Total Gas"
+//             value={`${formatNumber(productionMetrics.total_gas_eur, 0)} mcf`}
+//             sub="Estimated Ultimate Recovery"
+//             valueColor="text-purple-600"
+//             chipLabel="Gas"
+//             chipColor="bg-purple-50 text-purple-700"
+//           />
+//           <NumberTile
+//             title="Total Water"
+//             value={`${formatNumber(productionMetrics.total_water, 0)} bbl`}
+//             sub={`Over ${wellParams?.predictionHorizon || "-"} years`}
+//             valueColor="text-sky-600"
+//             chipLabel="Water"
+//             chipColor="bg-sky-50 text-sky-700"
+//           />
+
+//           {/* Year 1 */}
+//           <NumberTile
+//             title="Year 1 Oil Production"
+//             value={`${formatNumber(productionMetrics.year1_oil, 0)} bbl`}
+//             sub="First 12 months"
+//             valueColor="text-orange-600"
+//             chipLabel="Year 1"
+//             chipColor="bg-orange-50 text-orange-700"
+//           />
+//           <NumberTile
+//             title="Year 1 Gas Production"
+//             value={`${formatNumber(productionMetrics.year1_gas, 0)} mcf`}
+//             sub="First 12 months"
+//             valueColor="text-purple-600"
+//             chipLabel="Year 1"
+//             chipColor="bg-purple-50 text-purple-700"
+//           />
+//           <NumberTile
+//             title="Year 1 Water Production"
+//             value={`${formatNumber(productionMetrics.year1_water, 0)} bbl`}
+//             sub="First 12 months"
+//             valueColor="text-sky-600"
+//             chipLabel="Year 1"
+//             chipColor="bg-sky-50 text-sky-700"
+//           />
+//         </div>
+//       </div>
+
+//       {/* Production Forecast Simulation – separate charts with units */}
+//       <div className="bg-white rounded-2xl shadow-lg p-6 space-y-8">
+//         <div className="flex items-center justify-between">
+//           <h2 className="text-2xl font-bold text-gray-900">
+//             Production Forecast Simulation
+//           </h2>
+//         </div>
+
+//         {/* Oil */}
+//         <div>
+//           <h3 className="text-sm font-semibold text-slate-800 mb-2">
+//             Oil Rate (bbl/mo)
+//           </h3>
+//           <ResponsiveContainer width="100%" height={260}>
+//             <LineChart data={derivedSeries.filter((_, i) => i % 2 === 0)}>
+//               <CartesianGrid strokeDasharray="3 3" />
+//               <XAxis
+//                 dataKey="month"
+//                 tick={{ fontSize: 12 }}
+//                 label={{
+//                   value: "Month",
+//                   position: "insideBottom",
+//                   offset: -5,
+//                 }}
+//               />
+//               <YAxis
+//                 tick={{ fontSize: 12 }}
+//                 label={{
+//                   value: "Oil Rate (bbl/mo)",
+//                   angle: -90,
+//                   position: "insideLeft",
+//                   offset: 10,
+//                 }}
+//               />
+//               <Tooltip
+//                 formatter={(v) => [formatNumber(v, 0), "Oil (bbl/mo)"]}
+//               />
+//               <Legend />
+//               <Line
+//                 type="monotone"
+//                 dataKey="oil"
+//                 stroke="#f97316"
+//                 strokeWidth={2}
+//                 name="Oil (bbl/mo)"
+//                 dot={false}
+//               />
+//             </LineChart>
+//           </ResponsiveContainer>
+//         </div>
+
+//         {/* Gas */}
+//         <div>
+//           <h3 className="text-sm font-semibold text-slate-800 mb-2">
+//             Gas Rate (mcf/mo)
+//           </h3>
+//           <ResponsiveContainer width="100%" height={260}>
+//             <LineChart data={derivedSeries.filter((_, i) => i % 2 === 0)}>
+//               <CartesianGrid strokeDasharray="3 3" />
+//               <XAxis
+//                 dataKey="month"
+//                 tick={{ fontSize: 12 }}
+//                 label={{
+//                   value: "Month",
+//                   position: "insideBottom",
+//                   offset: -5,
+//                 }}
+//               />
+//               <YAxis
+//                 tick={{ fontSize: 12 }}
+//                 label={{
+//                   value: "Gas Rate (mcf/mo)",
+//                   angle: -90,
+//                   position: "insideLeft",
+//                   offset: 10,
+//                 }}
+//               />
+//               <Tooltip
+//                 formatter={(v) => [formatNumber(v, 0), "Gas (mcf/mo)"]}
+//               />
+//               <Legend />
+//               <Line
+//                 type="monotone"
+//                 dataKey="gas"
+//                 stroke="#8b5cf6"
+//                 strokeWidth={2}
+//                 name="Gas (mcf/mo)"
+//                 dot={false}
+//               />
+//             </LineChart>
+//           </ResponsiveContainer>
+//         </div>
+
+//         {/* Water */}
+//         <div>
+//           <h3 className="text-sm font-semibold text-slate-800 mb-2">
+//             Water Rate (bbl/mo)
+//           </h3>
+//           <ResponsiveContainer width="100%" height={260}>
+//             <LineChart data={derivedSeries.filter((_, i) => i % 2 === 0)}>
+//               <CartesianGrid strokeDasharray="3 3" />
+//               <XAxis
+//                 dataKey="month"
+//                 tick={{ fontSize: 12 }}
+//                 label={{
+//                   value: "Month",
+//                   position: "insideBottom",
+//                   offset: -5,
+//                 }}
+//               />
+//               <YAxis
+//                 tick={{ fontSize: 12 }}
+//                 label={{
+//                   value: "Water Rate (bbl/mo)",
+//                   angle: -90,
+//                   position: "insideLeft",
+//                   offset: 10,
+//                 }}
+//               />
+//               <Tooltip
+//                 formatter={(v) => [formatNumber(v, 0), "Water (bbl/mo)"]}
+//               />
+//               <Legend />
+//               <Line
+//                 type="monotone"
+//                 dataKey="water"
+//                 stroke="#3b82f6"
+//                 strokeWidth={2}
+//                 name="Water (bbl/mo)"
+//                 dot={false}
+//               />
+//             </LineChart>
+//           </ResponsiveContainer>
+//         </div>
+//       </div>
+
+//       {/* Cumulative Production (combined oil + gas via adding monthly values) */}
+//       <div className="bg-white rounded-2xl shadow-lg p-6">
+//         <h3 className="text-lg font-bold text-gray-900 mb-4">
+//           Cumulative Production (Oil + Gas Combined)
+//         </h3>
+
+//         <ResponsiveContainer width="100%" height={350}>
+//           <AreaChart data={derivedSeries.filter((_, i) => i % 3 === 0)}>
+//             <CartesianGrid strokeDasharray="3 3" />
+//             <XAxis
+//               dataKey="month"
+//               tick={{ fontSize: 12 }}
+//               label={{ value: "Month", position: "insideBottom", offset: -5 }}
+//             />
+//             <YAxis
+//               tick={{ fontSize: 12 }}
+//               label={{
+//                 value: "Cumulative (oil + gas)",
+//                 angle: -90,
+//                 position: "insideLeft",
+//                 offset: 10,
+//               }}
+//             />
+//             <Tooltip
+//               formatter={(v) => [formatNumber(v, 0), "Cumulative (oil+gas)"]}
+//             />
+//             <Legend />
+//             <Area
+//               type="monotone"
+//               dataKey="cumulative_combined"
+//               stroke="#10b981"
+//               fill="#10b981"
+//               fillOpacity={0.55}
+//               name="Cumulative Oil + Gas"
+//             />
+//           </AreaChart>
+//         </ResponsiveContainer>
+//       </div>
+
+//       {/* Water Cut Evolution */}
+//       <div className="bg-white rounded-2xl shadow-lg p-6">
+//         <h3 className="text-lg font-bold text-gray-900 mb-4">
+//           Water Cut Evolution
+//         </h3>
+
+//         <ResponsiveContainer width="100%" height={300}>
+//           <LineChart data={derivedSeries.filter((_, i) => i % 3 === 0)}>
+//             <CartesianGrid strokeDasharray="3 3" />
+//             <XAxis
+//               dataKey="month"
+//               tick={{ fontSize: 12 }}
+//               label={{ value: "Month", position: "insideBottom", offset: -5 }}
+//             />
+//             <YAxis
+//               tick={{ fontSize: 12 }}
+//               domain={["auto", "auto"]}
+//               label={{
+//                 value: "Water Cut (%)",
+//                 angle: -90,
+//                 position: "insideLeft",
+//                 offset: 10,
+//               }}
+//               tickFormatter={(v) =>
+//                 waterCutIsFraction ? `${(v * 100).toFixed(0)}%` : `${v.toFixed(0)}%`
+//               }
+//             />
+//             <Tooltip
+//               formatter={(v) => [
+//                 waterCutIsFraction
+//                   ? `${(Number(v) * 100).toFixed(2)}%`
+//                   : `${Number(v).toFixed(2)}%`,
+//                 "Water Cut",
+//               ]}
+//             />
+//             <Legend />
+//             <Line
+//               type="monotone"
+//               dataKey="water_cut"
+//               stroke="#0ea5e9"
+//               strokeWidth={2}
+//               name="Water Cut"
+//               dot={false}
+//               connectNulls
+//             />
+//           </LineChart>
+//         </ResponsiveContainer>
+//       </div>
+
+//       <ExecParamsModal open={openEdit} onClose={() => setOpenEdit(false)} />
+//     </div>
+//   );
+// }
+
+// function NumberTile({
+//   title,
+//   value,
+//   sub,
+//   valueColor = "text-slate-900",
+//   chipLabel,
+//   chipColor = "bg-slate-100 text-slate-700",
+// }) {
+//   return (
+//     <div className="rounded-xl border border-slate-100 bg-white/90 p-4 shadow-sm hover:shadow-md transition-shadow">
+//       <div className="flex items-center justify-between mb-1">
+//         <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+//           {title}
+//         </p>
+//         {chipLabel && (
+//           <span
+//             className={`inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium ${chipColor}`}
+//           >
+//             {chipLabel}
+//           </span>
+//         )}
+//       </div>
+//       <p className={`mt-1 text-2xl font-bold ${valueColor}`}>{value}</p>
+//       <p className="mt-1 text-sm text-slate-500">{sub}</p>
+//     </div>
+//   );
+// }
+
+
+
+
+
+
+
+
+
+
+
+
 import React, { useState, useEffect, useMemo } from "react";
 import {
   ResponsiveContainer,
@@ -323,7 +850,9 @@ export default function Production() {
         }
       } catch (e) {
         if (!cancelled) {
-          setProdUrlError(e.message || "Failed to load production_data_url.json");
+          setProdUrlError(
+            e.message || "Failed to load production_data_url.json"
+          );
           setProdUrlData([]);
         }
       } finally {
@@ -349,11 +878,14 @@ export default function Production() {
   /**
    * Prefer S3 URL data if available.
    * Fallback to context productionData so UI doesn’t break.
+   * NEW: compute cumulative_oil & cumulative_gas separately
    */
   const derivedSeries = useMemo(() => {
     // --- from S3 URL ---
     if (prodUrlData?.length) {
       let cumCombined = 0;
+      let cumOil = 0;
+      let cumGas = 0;
 
       return prodUrlData.map((d) => {
         const month = Number(d.month ?? d.time ?? 0);
@@ -365,6 +897,8 @@ export default function Production() {
             ? Number(d.water_cut)
             : null;
 
+        cumOil += oil;
+        cumGas += gas;
         cumCombined += oil + gas;
 
         return {
@@ -374,6 +908,8 @@ export default function Production() {
           gas,
           water,
           water_cut,
+          cumulative_oil: cumOil,
+          cumulative_gas: cumGas,
           cumulative_combined: cumCombined,
         };
       });
@@ -382,6 +918,9 @@ export default function Production() {
     // --- fallback: existing context data ---
     if (productionData?.length) {
       let cumCombined = 0;
+      let cumOil = 0;
+      let cumGas = 0;
+
       return productionData.map((d, i) => {
         const month = i + 1;
         const oil = Number(d.oil ?? 0);
@@ -392,6 +931,8 @@ export default function Production() {
             ? Number(d.waterCut)
             : null;
 
+        cumOil += oil;
+        cumGas += gas;
         cumCombined += oil + gas;
 
         return {
@@ -401,6 +942,8 @@ export default function Production() {
           gas,
           water,
           water_cut,
+          cumulative_oil: cumOil,
+          cumulative_gas: cumGas,
           cumulative_combined: cumCombined,
         };
       });
@@ -641,10 +1184,10 @@ export default function Production() {
         </div>
       </div>
 
-      {/* Cumulative Production (combined oil + gas via adding monthly values) */}
+      {/* Cumulative Production – separate oil + gas with two colors & units */}
       <div className="bg-white rounded-2xl shadow-lg p-6">
         <h3 className="text-lg font-bold text-gray-900 mb-4">
-          Cumulative Production (Oil + Gas Combined)
+          Cumulative Production (Oil & Gas)
         </h3>
 
         <ResponsiveContainer width="100%" height={350}>
@@ -655,26 +1198,67 @@ export default function Production() {
               tick={{ fontSize: 12 }}
               label={{ value: "Month", position: "insideBottom", offset: -5 }}
             />
+
+            {/* Left axis: Oil (bbl) */}
             <YAxis
+              yAxisId="left"
               tick={{ fontSize: 12 }}
               label={{
-                value: "Cumulative (oil + gas)",
+                value: "Cumulative Oil (bbl)",
                 angle: -90,
                 position: "insideLeft",
                 offset: 10,
               }}
             />
+
+            {/* Right axis: Gas (mcf) */}
+            <YAxis
+              yAxisId="right"
+              orientation="right"
+              tick={{ fontSize: 12 }}
+              label={{
+                value: "Cumulative Gas (mcf)",
+                angle: 90,
+                position: "insideRight",
+                offset: 10,
+              }}
+            />
+
             <Tooltip
-              formatter={(v) => [formatNumber(v, 0), "Cumulative (oil+gas)"]}
+              formatter={(value, name, props) => {
+                const key = props.dataKey;
+                if (key === "cumulative_oil") {
+                  return [`${formatNumber(value, 0)} bbl`, "Cumulative Oil"];
+                }
+                if (key === "cumulative_gas") {
+                  return [`${formatNumber(value, 0)} mcf`, "Cumulative Gas"];
+                }
+                // fallback (shouldn't really hit now)
+                return [formatNumber(value, 0), name];
+              }}
             />
             <Legend />
+
+            {/* Cumulative Oil */}
             <Area
+              yAxisId="left"
               type="monotone"
-              dataKey="cumulative_combined"
-              stroke="#10b981"
-              fill="#10b981"
-              fillOpacity={0.55}
-              name="Cumulative Oil + Gas"
+              dataKey="cumulative_oil"
+              stroke="#f97316"
+              fill="#fed7aa"
+              fillOpacity={0.7}
+              name="Cumulative Oil (bbl)"
+            />
+
+            {/* Cumulative Gas */}
+            <Area
+              yAxisId="right"
+              type="monotone"
+              dataKey="cumulative_gas"
+              stroke="#22c55e"
+              fill="#bbf7d0"
+              fillOpacity={0.7}
+              name="Cumulative Gas (mcf)"
             />
           </AreaChart>
         </ResponsiveContainer>
@@ -704,7 +1288,9 @@ export default function Production() {
                 offset: 10,
               }}
               tickFormatter={(v) =>
-                waterCutIsFraction ? `${(v * 100).toFixed(0)}%` : `${v.toFixed(0)}%`
+                waterCutIsFraction
+                  ? `${(v * 100).toFixed(0)}%`
+                  : `${v.toFixed(0)}%`
               }
             />
             <Tooltip
