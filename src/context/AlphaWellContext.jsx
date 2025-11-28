@@ -144,6 +144,8 @@ export function AlphaWellProvider({ children }) {
     adValorem: 0.05,
     oilSeverance: 0.05,
     gasSeverance: 0.05,
+    oilPrice: 60,
+    gasPrice: 3,
   });
 
   const [carbonParams, setCarbonParams] = useState({
@@ -311,6 +313,8 @@ export function AlphaWellProvider({ children }) {
         net_revenue_interest_oil: Number((economicParams.oilNRI ?? 0) * 100),
         net_revenue_interest_gas: Number((economicParams.gasNRI ?? 0) * 100),
         total_capex: Number(economicParams.totalCAPEX ?? 0),
+        oil_price: Number(economicParams.oilPrice ?? 60),
+        gas_price: Number(economicParams.gasPrice ?? 3),
       },
 
       carbon_params: {
