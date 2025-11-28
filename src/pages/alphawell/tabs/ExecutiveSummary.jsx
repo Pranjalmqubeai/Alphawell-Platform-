@@ -1060,6 +1060,12 @@ export default function ExecutiveSummary() {
     const num = Number(value);
     return !Number.isNaN(num) && value !== true && value !== false;
   };
+  const summaryColumns = useMemo(() => {
+    if (!summaryRows.length) return [];
+    return Object.keys(summaryRows[0]).filter(
+      (col) => !col.toLowerCase().includes("date")
+    );
+  }, [summaryRows]);
 
   /* -----------------------------------------
       Download CSV for entire summary table
@@ -1115,7 +1121,7 @@ export default function ExecutiveSummary() {
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-3xl font-bold mb-2">
-              Decision: {kpis.verdict}
+              Recommendation: {kpis.verdict}
             </h2>
             <p className="text-lg opacity-90">ESG Risk: {kpis.esgRisk}</p>
           </div>
@@ -1305,7 +1311,7 @@ export default function ExecutiveSummary() {
               <table className="min-w-full text-xs md:text-sm">
                 <thead className="bg-gradient-to-r from-slate-900 via-slate-800 to-sky-800 text-slate-50">
                   <tr className="border-b border-slate-700/60">
-                    {Object.keys(summaryRows[0]).map((col) => (
+                    {summaryColumns.map((col) => (
                       <th
                         key={col}
                         className="px-3 py-2 font-semibold uppercase tracking-wider text-[11px] whitespace-nowrap text-center"

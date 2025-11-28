@@ -3,8 +3,7 @@ import jsPDF from "jspdf";
 
 /**
  * Export a DOM node to multi-page A4 PDF using html-to-image.
- * Strips gradients/filters/animations *only during export* to avoid
- * oklch() and filter issues. Adds detailed error logs.
+ * Adds AlphaWell header + footer with logo, address, email.
  */
 export async function exportElementToPDF(elementId, filename = "export.pdf") {
   const el = document.getElementById(elementId);
@@ -14,18 +13,17 @@ export async function exportElementToPDF(elementId, filename = "export.pdf") {
     throw new Error(msg);
   }
 
-  // Add a flag so CSS can simplify visuals during capture
+  // Add flag so CSS can simplify visuals for snapshot
   document.body.classList.add("pdf-exporting");
 
-  // Wait 2 RAFs so charts have rendered & CSS flag is applied
-  await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+  await new Promise((r) =>
+    requestAnimationFrame(() => requestAnimationFrame(r))
+  );
 
   try {
-    // html-to-image "filter" lets us skip problematic nodes
     const filter = (node) => {
       if (!(node instanceof HTMLElement)) return true;
 
-      // Skip decorative blobs / heavy filters / animations
       const bad = [
         "animate-blob",
         "mix-blend-multiply",
@@ -35,34 +33,23 @@ export async function exportElementToPDF(elementId, filename = "export.pdf") {
       ];
       if (bad.some((c) => node.classList?.contains(c))) return false;
 
-      // Also skip nodes that explicitly use gradient backgrounds inline
       const bg = node.style?.backgroundImage || "";
-      if (bg.includes("linear-gradient") || bg.includes("radial-gradient")) return false;
+      if (bg.includes("linear-gradient") || bg.includes("radial-gradient"))
+        return false;
 
       return true;
     };
 
-    // Force a plain background (avoid transparent PDF)
-    const style = {
-      background: "#ffffff",
-      // neutralize any potential CSS that may taint the canvas
-      "-webkit-filter": "none",
-      "filter": "none",
-    };
+    const style = { background: "#ffffff", filter: "none" };
 
-    // Use PNG to preserve sharp text; JPG works too
     const dataUrl = await htmlToImage.toPng(el, {
       cacheBust: true,
-      pixelRatio: 2, // crisp output
+      pixelRatio: 2,
       filter,
       style,
-      // canvasWidth/Height help avoid fractional sizes
       canvasWidth: el.scrollWidth,
       canvasHeight: el.scrollHeight,
-      // skip external fonts to avoid timing issues
       skipFonts: true,
-      // Prefer CORS-safe images; if any cross-origin image is tainting,
-      // filter() above should have excluded their node.
     });
 
     const img = new Image();
@@ -79,24 +66,87 @@ export async function exportElementToPDF(elementId, filename = "export.pdf") {
     let heightLeft = imgHeight;
     let position = 0;
 
-    pdf.addImage(dataUrl, "PNG", 0, position, imgWidth, imgHeight);
-    heightLeft -= pageHeight;
+    // ---------- HEADER + FOOTER CONFIG ----------
+    const headerHeight = 60;
+    const footerHeight = 50;
+    const contentTop = headerHeight;
 
-    while (heightLeft > 5) {
-      position = heightLeft - imgHeight;
+    // Your logo (Base64 PNG recommended)
+    const LOGO = "../src/assets/logo.jpg"; // <-- Replace with your logo path (public/)
+
+    const addHeader = () => {
+      pdf.setFillColor("#F1F5F9");
+      pdf.rect(0, 0, pageWidth, headerHeight, "F");
+
+      // Logo
+      if (LOGO) {
+        pdf.addImage(LOGO, "PNG", 20, 10, 40, 40);
+      }
+
+      pdf.setFontSize(16);
+      pdf.setTextColor("#0F172A");
+      pdf.text("AlphaWell Intelligence", 70, 28);
+
+      pdf.setFontSize(9);
+      pdf.setTextColor("#475569");
+      pdf.text("AI-Powered Well Forecasting & Economic Intelligence", 70, 42);
+    };
+
+    const addFooter = () => {
+      pdf.setFillColor("#F1F5F9");
+      pdf.rect(0, pageHeight - footerHeight, pageWidth, footerHeight, "F");
+
+      pdf.setFontSize(8);
+      pdf.setTextColor("#475569");
+
+      pdf.text(
+        "© 2025 AlphaWell Intelligence — All Rights Reserved",
+        20,
+        pageHeight - 28
+      );
+      pdf.text("Email: support@alphawell.ai", 20, pageHeight - 16);
+      pdf.text("Website: https://alphawell.ai", 20, pageHeight - 4);
+    };
+
+    // ---------- FIRST PAGE ----------
+    addHeader();
+    pdf.addImage(
+      dataUrl,
+      "PNG",
+      0,
+      contentTop, // start BELOW the header
+      imgWidth,
+      imgHeight
+    );
+
+    addFooter();
+
+    heightLeft -= pageHeight - headerHeight - footerHeight;
+
+    // ---------- MORE PAGES ----------
+    while (heightLeft > 20) {
       pdf.addPage();
-      pdf.addImage(dataUrl, "PNG", 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
+      addHeader();
+
+      position = heightLeft - imgHeight + contentTop;
+
+      pdf.addImage(
+        dataUrl,
+        "PNG",
+        0,
+        position,
+        imgWidth,
+        imgHeight
+      );
+
+      addFooter();
+
+      heightLeft -= pageHeight - headerHeight - footerHeight;
     }
 
     pdf.save(filename);
   } catch (e) {
-    // Log everything we can for debugging
-    console.error("PDF export failed:", e, {
-      name: e?.name,
-      message: e?.message,
-      stack: e?.stack,
-    });
+    console.error("PDF export failed:", e);
     throw e instanceof Error ? e : new Error("Unknown PDF export error");
   } finally {
     document.body.classList.remove("pdf-exporting");
