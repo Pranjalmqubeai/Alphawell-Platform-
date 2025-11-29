@@ -1555,7 +1555,6 @@
 
 
 
-
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import {
   ResponsiveContainer,
@@ -1628,7 +1627,7 @@ export default function Neighborhood() {
   const [form, setForm] = useState({
     latitude: wellParams?.latitude ?? 31.809364,
     longitude: wellParams?.longitude ?? -104.049991,
-    radius_mi: 5,
+    radius_mi: 15,
     initial_date: "2020-01-01",
   });
 
@@ -2170,9 +2169,7 @@ export default function Neighborhood() {
                 </p>
                 <p className="text-2xl font-bold text-slate-900">
                   {(
-                    getKpi("total_wells") ??
-                    wells.length ??
-                    0
+                    getKpi("total_wells") ?? wells.length ?? 0
                   ).toLocaleString()}
                 </p>
               </div>
@@ -2251,80 +2248,54 @@ export default function Neighborhood() {
             )}
           </div>
 
-          {/* NEIGHBORHOOD AVERAGE PRODUCTION LINE CHART */}
-          <div className="bg-white rounded-2xl shadow-md border border-slate-100 p-6">
+          {/* ============================
+              NEIGHBORHOOD AVERAGE GRAPHS
+          =============================== */}
+          <div className="bg-white rounded-2xl shadow-md border border-slate-100 p-6 space-y-10">
             <h3 className="text-lg font-bold text-slate-900 mb-4">
               Neighborhood Average Production & Carbon Intensity
             </h3>
-            {prodChartData.length ? (
-              <ResponsiveContainer width="100%" height={260}>
-                <LineChart data={prodChartData}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" />
-                  <YAxis
-                    yAxisId="left"
-                    label={{
-                      value: "Average Production",
-                      angle: -90,
-                      position: "insideLeft",
-                    }}
-                  />
-                  <YAxis
-                    yAxisId="right"
-                    orientation="right"
-                    label={{
-                      value: "Carbon Intensity",
-                      angle: 90,
-                      position: "insideRight",
-                    }}
-                  />
-                  <Tooltip />
-                  <Legend />
-                  <Line
-                    yAxisId="left"
-                    type="monotone"
-                    dataKey="oil_avg"
-                    name="Oil Avg"
-                    stroke="#3b82f6"
-                    dot={false}
-                    strokeWidth={2}
-                  />
-                  <Line
-                    yAxisId="left"
-                    type="monotone"
-                    dataKey="gas_avg"
-                    name="Gas Avg"
-                    stroke="#22c55e"
-                    dot={false}
-                    strokeWidth={2}
-                  />
-                  <Line
-                    yAxisId="left"
-                    type="monotone"
-                    dataKey="water_avg"
-                    name="Water Avg"
-                    stroke="#f97316"
-                    dot={false}
-                    strokeWidth={2}
-                  />
-                  <Line
-                    yAxisId="right"
-                    type="monotone"
-                    dataKey="avg_carbon_intensity"
-                    name="Avg Carbon Intensity"
-                    stroke="#6366f1"
-                    dot={false}
-                    strokeDasharray="5 3"
-                    strokeWidth={2}
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            ) : (
+
+            {!prodChartData.length && (
               <p className="text-sm text-slate-500">
                 Run the analysis to see neighborhood average production and
                 carbon intensity from{" "}
                 <code>neighborhood_production_metrics.json</code>.
               </p>
+            )}
+
+            {prodChartData.length > 0 && (
+              <div className="space-y-12">
+                {/* --- OIL AVG --- */}
+                <ChartBlock
+                  title="Average Oil Production"
+                  unit="bbl/month"
+                  data={prodChartData}
+                  dataKey="oil_avg"
+                  stroke="#3b82f6"
+                />
+
+                {/* --- GAS AVG --- */}
+                <ChartBlock
+                  title="Average Gas Production"
+                  unit="mcf/month"
+                  data={prodChartData}
+                  dataKey="gas_avg"
+                  stroke="#22c55e"
+                />
+
+                {/* --- WATER AVG --- */}
+                <ChartBlock
+                  title="Average Water Production"
+                  unit="bbl/month"
+                  data={prodChartData}
+                  dataKey="water_avg"
+                  stroke="#f97316"
+                />
+
+               
+                
+              </div>
             )}
           </div>
         </section>
@@ -2356,3 +2327,36 @@ function StatCard({ title, value, color, tcolor, vcolor }) {
   );
 }
 
+function ChartBlock({ title, unit, data, dataKey, stroke, dashed }) {
+  return (
+    <div>
+      <h4 className="text-sm font-semibold text-slate-700 mb-2">
+        {title} <span className="text-slate-400 text-xs">({unit})</span>
+      </h4>
+
+      <ResponsiveContainer width="100%" height={240}>
+        <LineChart data={data}>
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="month" />
+          <YAxis
+            label={{
+              value: unit,
+              angle: -90,
+              position: "insideLeft",
+            }}
+          />
+          <Tooltip />
+          <Legend />
+          <Line
+            type="monotone"
+            dataKey={dataKey}
+            stroke={stroke}
+            dot={false}
+            strokeWidth={2}
+            strokeDasharray={dashed ? "5 3" : "0"}
+          />
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
