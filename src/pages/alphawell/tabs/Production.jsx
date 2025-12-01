@@ -274,35 +274,7 @@
 //   );
 // }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // src/components/AlphaWell/tabs/Production.jsx
-
-
 
 // import React, { useState, useEffect, useMemo } from "react";
 // import {
@@ -791,17 +763,6 @@
 //   );
 // }
 
-
-
-
-
-
-
-
-
-
-
-
 import React, { useState, useEffect, useMemo } from "react";
 import {
   ResponsiveContainer,
@@ -843,7 +804,8 @@ export default function Production() {
 
       try {
         const res = await fetch(productionDataUrl);
-        if (!res.ok) throw new Error(`production_data_url error: ${res.status}`);
+        if (!res.ok)
+          throw new Error(`production_data_url error: ${res.status}`);
         const json = await res.json();
         if (!cancelled) {
           setProdUrlData(Array.isArray(json) ? json : []);
@@ -980,7 +942,7 @@ export default function Production() {
 
   return (
     <div className="space-y-6">
-      {/* KPI BOXES (peaks hidden) */}
+      {/* KPI BOXES – updated layout (Title → Value → Unit, large fonts) */}
       <div className="bg-white/80 rounded-2xl shadow-md border border-slate-100 p-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-xs font-semibold tracking-[0.12em] uppercase text-slate-500">
@@ -997,59 +959,83 @@ export default function Production() {
         <div className="grid gap-4 md:grid-cols-3">
           {/* Totals */}
           <NumberTile
-            title="Total Oil"
-            value={`${formatNumber(productionMetrics.total_oil_eur, 0)} bbl`}
-            sub="Estimated Ultimate Recovery"
-            valueColor="text-orange-600"
-            chipLabel="Oil"
-            chipColor="bg-orange-50 text-orange-700"
+            title="Total Oil EUR"
+            value={
+              <span className="text-orange-600">
+                {formatNumber(productionMetrics.total_oil_eur, 0)}
+                <span className="text-gray-500 text-2xl font-normal ml-2">
+                  (bbl)
+                </span>
+              </span>
+            }
           />
+
           <NumberTile
-            title="Total Gas"
-            value={`${formatNumber(productionMetrics.total_gas_eur, 0)} mcf`}
-            sub="Estimated Ultimate Recovery"
-            valueColor="text-purple-600"
-            chipLabel="Gas"
-            chipColor="bg-purple-50 text-purple-700"
+            title="Total Gas EUR"
+            value={
+              <span className="text-purple-600">
+                {formatNumber(productionMetrics.total_gas_eur, 0)}
+                <span className="text-gray-500 text-2xl font-normal ml-2">
+                  (mcf)
+                </span>
+              </span>
+            }
           />
+
           <NumberTile
             title="Total Water"
-            value={`${formatNumber(productionMetrics.total_water, 0)} bbl`}
-            sub={`Over ${wellParams?.predictionHorizon || "-"} years`}
-            valueColor="text-sky-600"
-            chipLabel="Water"
-            chipColor="bg-sky-50 text-sky-700"
+            value={
+              <span className="text-sky-600">
+                {formatNumber(productionMetrics.total_water, 0)}
+                <span className="text-gray-500 text-2xl font-normal ml-2">
+                  (bbl)
+                </span>
+              </span>
+            }
           />
 
           {/* Year 1 */}
           <NumberTile
             title="Year 1 Oil Production"
-            value={`${formatNumber(productionMetrics.year1_oil, 0)} bbl`}
-            sub="First 12 months"
-            valueColor="text-orange-600"
-            chipLabel="Year 1"
-            chipColor="bg-orange-50 text-orange-700"
+            value={
+              <span className="text-orange-600">
+                {formatNumber(productionMetrics.year1_oil, 0)}
+                <span className="text-gray-500 text-2xl font-normal ml-2">
+                  (bbl)
+                </span>
+              </span>
+            }
           />
+
           <NumberTile
             title="Year 1 Gas Production"
-            value={`${formatNumber(productionMetrics.year1_gas, 0)} mcf`}
-            sub="First 12 months"
-            valueColor="text-purple-600"
-            chipLabel="Year 1"
-            chipColor="bg-purple-50 text-purple-700"
+            value={
+              <span className="text-purple-600">
+                {formatNumber(productionMetrics.year1_gas, 0)}
+                <span className="text-gray-500 text-2xl font-normal ml-2">
+                  (mcf)
+                </span>
+              </span>
+            }
           />
+
           <NumberTile
             title="Year 1 Water Production"
-            value={`${formatNumber(productionMetrics.year1_water, 0)} bbl`}
-            sub="First 12 months"
-            valueColor="text-sky-600"
-            chipLabel="Year 1"
-            chipColor="bg-sky-50 text-sky-700"
+            value={
+              <span className="text-sky-600">
+                {formatNumber(productionMetrics.year1_water, 0)}
+                <span className="text-gray-500 text-2xl font-normal ml-2">
+                  (bbl)
+                </span>
+              </span>
+            }
           />
         </div>
       </div>
 
       {/* Production Forecast Simulation – separate charts with units */}
+      {/* ... unchanged charts below ... */}
+
       <div className="bg-white rounded-2xl shadow-lg p-6 space-y-8">
         <div className="flex items-center justify-between">
           <h2 className="text-2xl font-bold text-gray-900">
@@ -1185,6 +1171,8 @@ export default function Production() {
       </div>
 
       {/* Cumulative Production – separate oil + gas with two colors & units */}
+      {/* ... rest of component unchanged ... */}
+
       <div className="bg-white rounded-2xl shadow-lg p-6">
         <h3 className="text-lg font-bold text-gray-900 mb-4">
           Cumulative Production (Oil & Gas)
@@ -1233,7 +1221,6 @@ export default function Production() {
                 if (key === "cumulative_gas") {
                   return [`${formatNumber(value, 0)} mcf`, "Cumulative Gas"];
                 }
-                // fallback (shouldn't really hit now)
                 return [formatNumber(value, 0), name];
               }}
             />
@@ -1320,18 +1307,20 @@ export default function Production() {
   );
 }
 
+/** KPI tile with large Title → Value → Unit layout */
 function NumberTile({
   title,
   value,
-  sub,
+  unit,
   valueColor = "text-slate-900",
   chipLabel,
   chipColor = "bg-slate-100 text-slate-700",
 }) {
   return (
     <div className="rounded-xl border border-slate-100 bg-white/90 p-4 shadow-sm hover:shadow-md transition-shadow">
-      <div className="flex items-center justify-between mb-1">
-        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">
+      <div className="flex items-center justify-between mb-2">
+        {/* Top: what is being measured (large) */}
+        <p className="text-xl md:text-2xl font-extrabold text-slate-900">
           {title}
         </p>
         {chipLabel && (
@@ -1342,8 +1331,16 @@ function NumberTile({
           </span>
         )}
       </div>
-      <p className={`mt-1 text-2xl font-bold ${valueColor}`}>{value}</p>
-      <p className="mt-1 text-sm text-slate-500">{sub}</p>
+
+      {/* Middle: numeric value (largest) */}
+      <p className={`mt-1 text-3xl md:text-4xl font-extrabold ${valueColor}`}>
+        {value}
+      </p>
+
+      {/* Bottom: unit (large but <= value size) */}
+      <p className="mt-2 text-lg md:text-xl font-semibold text-slate-500">
+        {unit}
+      </p>
     </div>
   );
 }

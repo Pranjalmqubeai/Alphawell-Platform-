@@ -1555,6 +1555,17 @@
 
 
 
+
+
+
+
+
+
+
+
+
+
+
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import {
   ResponsiveContainer,
@@ -1624,12 +1635,25 @@ export default function Neighborhood() {
   const { wellParams, currentUser } = useAlphaWell();
 
   // ---------- FORM (LEFT SIDEBAR) ----------
-  const [form, setForm] = useState({
+  const [form, setForm] = useState(() => ({
     latitude: wellParams?.latitude ?? 31.809364,
     longitude: wellParams?.longitude ?? -104.049991,
-    radius_mi: 15,
+    radius_mi: wellParams?.radiusMiles ?? 15, // 👈 pull from InputConfig
     initial_date: "2020-01-01",
-  });
+  }));
+
+  // keep form in sync if wellParams change (e.g. user edited InputConfig)
+  useEffect(() => {
+    setForm((prev) => ({
+      ...prev,
+      latitude: wellParams?.latitude ?? prev.latitude,
+      longitude: wellParams?.longitude ?? prev.longitude,
+      radius_mi:
+        typeof wellParams?.radiusMiles === "number"
+          ? wellParams.radiusMiles
+          : prev.radius_mi,
+    }));
+  }, [wellParams]);
 
   const handleChange = (field) => (e) =>
     setForm((p) => ({ ...p, [field]: e.target.value }));
@@ -2292,9 +2316,6 @@ export default function Neighborhood() {
                   dataKey="water_avg"
                   stroke="#f97316"
                 />
-
-               
-                
               </div>
             )}
           </div>

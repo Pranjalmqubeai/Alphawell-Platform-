@@ -268,67 +268,132 @@ export function AlphaWellProvider({ children }) {
   };
 
   /** ---------- Helpers: map UI state -> API payload ---------- */
-  const buildAnalyzePayload = () => {
-    const horizonYears = Number(wellParams.predictionHorizon || 15);
-    const horizonMonths = horizonYears * 12;
+  // const buildAnalyzePayload = () => {
+  //   const horizonYears = Number(wellParams.predictionHorizon || 15);
+  //   const horizonMonths = horizonYears * 12;
+
+  //   return {
+  //     user_id: currentUser?.id ? String(currentUser.id) : "string",
+  //     session_id: "string",
+
+  //     well_params: {
+  //       well_id: String(wellParams.wellId || ""),
+  //       latitude: Number(wellParams.latitude),
+  //       longitude: Number(wellParams.longitude),
+  //       env_interval: String(wellParams.env_interval || "WOLFCAMP A LOWER"),
+  //       state_well_type: String(wellParams.stateWellType || "GAS_WELL"),
+  //       env_well_type: String(wellParams.env_well_type || "GAS"),
+  //       trajectory: String(wellParams.trajectory || "HORIZONTAL"),
+  //       env_wellbore_type: String(
+  //         wellParams.env_wellbore_type || "SINGLE BORE"
+  //       ),
+  //       formation: String(wellParams.formation || "WOLFCAMP"),
+  //       tvd_ft: Number(wellParams.tvd || 9579),
+  //       md_ft: Number(wellParams.md || 14650),
+  //       env_elevation_kb_ft: Number(
+  //         wellParams.env_elevation_kb_ft ?? wellParams.elevationKB ?? 2995
+  //       ),
+  //       env_elevation_gl_ft: Number(wellParams.env_elevation_gl_ft ?? 2995),
+  //       elevation_kb_ft: Number(wellParams.elevationKB ?? 3019),
+  //       elevation_gl_ft: Number(wellParams.elevationGL ?? 2995),
+  //       env_fluid_type: String(wellParams.env_fluid_type || "FRESH WATER"),
+  //       lateral_length_ft: Number(wellParams.lateralLength || 4778),
+  //       prediction_horizon: horizonMonths,
+  //     },
+
+  //     economic_params: {
+  //       discount_factor: Number((economicParams.discountRate ?? 0) * 100),
+  //       gas_opex: Number(economicParams.gasOPEX ?? 0),
+  //       oil_opex: Number(economicParams.oilOPEX ?? 0),
+  //       water_opex: Number(economicParams.waterOPEX ?? 0),
+  //       fixed_opex: Number((economicParams.fixedOPEX ?? 0) / 12),
+  //       working_interest_oil: Number((economicParams.oilWI ?? 0) * 100),
+  //       working_interest_gas: Number((economicParams.gasWI ?? 0) * 100),
+  //       working_interest_water: Number((economicParams.waterWI ?? 0) * 100),
+  //       net_revenue_interest_oil: Number((economicParams.oilNRI ?? 0) * 100),
+  //       net_revenue_interest_gas: Number((economicParams.gasNRI ?? 0) * 100),
+  //       total_capex: Number(economicParams.totalCAPEX ?? 0),
+  //       oil_price: Number(economicParams.oilPrice ?? 60),
+  //       gas_price: Number(economicParams.gasPrice ?? 3),
+  //     },
+
+  //     carbon_params: {
+  //       processing_intensity_factor: Number(
+  //         carbonParams.processingIntensity ?? 1
+  //       ),
+  //       flaring_percentage: Number((carbonParams.flarePercent ?? 0) * 100),
+  //       carbon_price_per_ton: Number(carbonParams.carbonPrice ?? 50),
+  //     },
+
+  //     include_confidence: true,
+  //   };
+  // };
+ const buildAnalyzePayload = (overrides = {}) => {
+    // Allow overrides from callers (ExecParamsModal) but fallback to context state
+    const well = overrides.wellParams ?? wellParams;
+    const econ = overrides.economicParams ?? economicParams;
+    const carbon = overrides.carbonParams ?? carbonParams;
+
+    // 👇 IMPORTANT: predictionHorizon is now in MONTHS (from InputConfig / ExecParamsModal)
+    // so we no longer multiply by 12 here.
+    const horizonMonths = Number(well.predictionHorizon || 360); // default 360 months
 
     return {
       user_id: currentUser?.id ? String(currentUser.id) : "string",
       session_id: "string",
 
       well_params: {
-        well_id: String(wellParams.wellId || ""),
-        latitude: Number(wellParams.latitude),
-        longitude: Number(wellParams.longitude),
-        env_interval: String(wellParams.env_interval || "WOLFCAMP A LOWER"),
-        state_well_type: String(wellParams.stateWellType || "GAS_WELL"),
-        env_well_type: String(wellParams.env_well_type || "GAS"),
-        trajectory: String(wellParams.trajectory || "HORIZONTAL"),
-        env_wellbore_type: String(
-          wellParams.env_wellbore_type || "SINGLE BORE"
-        ),
-        formation: String(wellParams.formation || "WOLFCAMP"),
-        tvd_ft: Number(wellParams.tvd || 9579),
-        md_ft: Number(wellParams.md || 14650),
+        well_id: String(well.wellId || ""),
+        latitude: Number(well.latitude),
+        longitude: Number(well.longitude),
+        env_interval: String(well.env_interval || "WOLFCAMP A LOWER"),
+        state_well_type: String(well.stateWellType || "GAS_WELL"),
+        env_well_type: String(well.env_well_type || "GAS"),
+        trajectory: String(well.trajectory || "HORIZONTAL"),
+        env_wellbore_type: String(well.env_wellbore_type || "SINGLE BORE"),
+        formation: String(well.formation || "WOLFCAMP"),
+        tvd_ft: Number(well.tvd || 9579),
+        md_ft: Number(well.md || 14650),
         env_elevation_kb_ft: Number(
-          wellParams.env_elevation_kb_ft ?? wellParams.elevationKB ?? 2995
+          well.env_elevation_kb_ft ?? well.elevationKB ?? 2995
         ),
-        env_elevation_gl_ft: Number(wellParams.env_elevation_gl_ft ?? 2995),
-        elevation_kb_ft: Number(wellParams.elevationKB ?? 3019),
-        elevation_gl_ft: Number(wellParams.elevationGL ?? 2995),
-        env_fluid_type: String(wellParams.env_fluid_type || "FRESH WATER"),
-        lateral_length_ft: Number(wellParams.lateralLength || 4778),
+        env_elevation_gl_ft: Number(well.env_elevation_gl_ft ?? 2995),
+        elevation_kb_ft: Number(well.elevationKB ?? 3019),
+        elevation_gl_ft: Number(well.elevationGL ?? 2995),
+        env_fluid_type: String(well.env_fluid_type || "FRESH WATER"),
+        lateral_length_ft: Number(well.lateralLength || 4778),
+
+        // 👇 send months directly
         prediction_horizon: horizonMonths,
       },
 
       economic_params: {
-        discount_factor: Number((economicParams.discountRate ?? 0) * 100),
-        gas_opex: Number(economicParams.gasOPEX ?? 0),
-        oil_opex: Number(economicParams.oilOPEX ?? 0),
-        water_opex: Number(economicParams.waterOPEX ?? 0),
-        fixed_opex: Number((economicParams.fixedOPEX ?? 0) / 12),
-        working_interest_oil: Number((economicParams.oilWI ?? 0) * 100),
-        working_interest_gas: Number((economicParams.gasWI ?? 0) * 100),
-        working_interest_water: Number((economicParams.waterWI ?? 0) * 100),
-        net_revenue_interest_oil: Number((economicParams.oilNRI ?? 0) * 100),
-        net_revenue_interest_gas: Number((economicParams.gasNRI ?? 0) * 100),
-        total_capex: Number(economicParams.totalCAPEX ?? 0),
-        oil_price: Number(economicParams.oilPrice ?? 60),
-        gas_price: Number(economicParams.gasPrice ?? 3),
+        discount_factor: Number((econ.discountRate ?? 0) * 100),
+        gas_opex: Number(econ.gasOPEX ?? 0),
+        oil_opex: Number(econ.oilOPEX ?? 0),
+        water_opex: Number(econ.waterOPEX ?? 0),
+        fixed_opex: Number((econ.fixedOPEX ?? 0) / 12),
+        working_interest_oil: Number((econ.oilWI ?? 0) * 100),
+        working_interest_gas: Number((econ.gasWI ?? 0) * 100),
+        working_interest_water: Number((econ.waterWI ?? 0) * 100),
+        net_revenue_interest_oil: Number((econ.oilNRI ?? 0) * 100),
+        net_revenue_interest_gas: Number((econ.gasNRI ?? 0) * 100),
+        total_capex: Number(econ.totalCAPEX ?? 0),
+        oil_price: Number(econ.oilPrice ?? 60),
+        gas_price: Number(econ.gasPrice ?? 3),
       },
 
       carbon_params: {
         processing_intensity_factor: Number(
-          carbonParams.processingIntensity ?? 1
+          carbon.processingIntensity ?? 1
         ),
-        flaring_percentage: Number((carbonParams.flarePercent ?? 0) * 100),
-        carbon_price_per_ton: Number(carbonParams.carbonPrice ?? 50),
+        flaring_percentage: Number((carbon.flarePercent ?? 0) * 100),
+        carbon_price_per_ton: Number(carbon.carbonPrice ?? 50),
       },
 
       include_confidence: true,
     };
   };
-
   /** ---------- Transform API -> UI state ---------- */
   const adaptAnalysis = (res) => {
     const prodArr = Array.isArray(res.production_data)
@@ -516,10 +581,16 @@ export function AlphaWellProvider({ children }) {
   };
 
   /** ---------- Analysis (live) ---------- */
-  const analyze = async () => {
+    /** ---------- Analysis (live) ---------- */
+  const analyze = async (overrides = {}) => {
     if (isAnalyzing) return;
 
-    if (!wellParams.latitude || !wellParams.longitude) {
+    // Use overrides if provided (ExecParamsModal) otherwise fall back to context
+    const well = overrides.wellParams ?? wellParams;
+    const econ = overrides.economicParams ?? economicParams;
+    const carbon = overrides.carbonParams ?? carbonParams;
+
+    if (!well.latitude || !well.longitude) {
       toast.error("Please provide latitude and longitude for the well.");
       return;
     }
@@ -528,17 +599,23 @@ export function AlphaWellProvider({ children }) {
     setLastApiError(null);
 
     try {
-      const payload = buildAnalyzePayload();
+      // build payload from the *current* values we want to send
+      const payload = buildAnalyzePayload({
+        wellParams: well,
+        economicParams: econ,
+        carbonParams: carbon,
+      });
+
       const { data } = await wellsApi.post("/api/analysis/analyze", payload);
 
       console.log("[AlphaWell] /api/analysis/analyze response:", data);
       setLastApiResponse(data);
 
-      const { prod, econ, carbon } = adaptAnalysis(data);
+      const { prod, econ: econSeries, carbon: carbonSeries } = adaptAnalysis(data);
 
       const haveProd = prod.length > 0;
-      const haveEcon = econ.length > 0;
-      const haveCarb = carbon.length > 0;
+      const haveEcon = econSeries.length > 0;
+      const haveCarb = carbonSeries.length > 0;
 
       if (!haveProd && !haveEcon && !haveCarb) {
         console.warn(
@@ -551,14 +628,23 @@ export function AlphaWellProvider({ children }) {
         return;
       }
 
+      // 🔁 Update context state with the SAME values we analyzed with
+      setWellParams(well);
+      setEconomicParams(econ);
+      setCarbonParams(carbon);
+
       setProductionData(prod);
-      setEconomicData(econ);
-      setCarbonData(carbon);
+      setEconomicData(econSeries);
+      setCarbonData(carbonSeries);
       setAnalyzed(true);
       setActiveTab("executive");
 
-      // 🔁 fetch neighborhood after a successful main analysis
-      fetchNeighborhood();
+      // Neighborhood should reflect new well + radius
+      fetchNeighborhood({
+        latitude: well.latitude,
+        longitude: well.longitude,
+        radius_mi: well.radiusMiles ?? 5,
+      });
     } catch (e) {
       console.error(
         "[AlphaWell] analyze failed:",
@@ -576,6 +662,7 @@ export function AlphaWellProvider({ children }) {
       setIsAnalyzing(false);
     }
   };
+
 
   const resetAnalysis = () => {
     setProductionData([]);
