@@ -845,6 +845,7 @@ import {
   Calendar,
   AlertTriangle,
   CheckCircle,
+  MapPin,
 } from "lucide-react";
 import {
   ResponsiveContainer,
@@ -1121,7 +1122,87 @@ export default function ExecutiveSummary() {
   return (
     <div className="space-y-6" id="exec-summary">
       {/* =====================================================================
+            WELL PARAMETERS PANEL
+      ===================================================================== */}
+      <div className="bg-white rounded-xl shadow-lg p-6">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-sky-50">
+              <MapPin className="w-4 h-4 text-sky-600" />
+            </span>
+            <h2 className="text-xl md:text-2xl font-bold text-slate-900">
+              Well Parameters
+            </h2>
+          </div>
+          <button
+            onClick={() => setOpenEdit(true)}
+            className="cursor-pointer inline-flex items-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-blue-700"
+          >
+            Edit Parameters
+          </button>
+        </div>
+
+        <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-4">
+          <EconPill label="Formation" value={wellParams.formation || "—"} />
+          <EconPill
+            label="Trajectory"
+            value={
+              wellParams.trajectory
+                ? String(wellParams.trajectory).toUpperCase()
+                : "—"
+            }
+          />
+          <EconPill
+            label="Latitude"
+            value={
+              wellParams.latitude != null ? wellParams.latitude.toFixed(4) : "—"
+            }
+          />
+          <EconPill
+            label="Longitude"
+            value={
+              wellParams.longitude != null
+                ? wellParams.longitude.toFixed(4)
+                : "—"
+            }
+          />
+          <EconPill
+            label="TVD"
+            value={
+              wellParams.tvd != null
+                ? `${Number(wellParams.tvd).toLocaleString()} ft`
+                : "—"
+            }
+          />
+          <EconPill
+            label="Lateral Length"
+            value={
+              wellParams.lateralLength != null
+                ? `${Number(wellParams.lateralLength).toLocaleString()} ft`
+                : "—"
+            }
+          />
+          <EconPill
+            label="Radius"
+            value={`${Number(
+              wellParams.radiusMiles != null ? wellParams.radiusMiles : 15
+            ).toLocaleString()} mi`}
+          />
+          <EconPill
+            label="Prediction Horizon"
+            value={
+              wellParams.predictionHorizon
+                ? `${wellParams.predictionHorizon} months`
+                : "360"
+            }
+          />
+        </div>
+      </div>
+
+      {/* =====================================================================
             ECONOMIC PARAMETERS PANEL (replaces Decision banner)
+
+      
       ===================================================================== */}
       <div className="bg-white rounded-xl shadow-lg p-6">
         <div className="flex items-center justify-between mb-4">
@@ -1134,12 +1215,7 @@ export default function ExecutiveSummary() {
             </h2>
           </div>
 
-          <button
-            onClick={() => setOpenEdit(true)}
-            className="cursor-pointer inline-flex items-center rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white shadow hover:bg-blue-700"
-          >
-            Edit Parameters
-          </button>
+          
         </div>
 
         <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">

@@ -1046,7 +1046,7 @@ export default function Production() {
         {/* Oil */}
         <div>
           <h3 className="text-sm font-semibold text-slate-800 mb-2">
-            Oil Rate (bbl/mo)
+            Oil  (bbl/mo)
           </h3>
           <ResponsiveContainer width="100%" height={260}>
             <LineChart data={derivedSeries.filter((_, i) => i % 2 === 0)}>
@@ -1088,7 +1088,7 @@ export default function Production() {
         {/* Gas */}
         <div>
           <h3 className="text-sm font-semibold text-slate-800 mb-2">
-            (mcf/mo)
+           Gas (mcf/mo)
           </h3>
           <ResponsiveContainer width="100%" height={260}>
             <LineChart data={derivedSeries.filter((_, i) => i % 2 === 0)}>
@@ -1105,7 +1105,7 @@ export default function Production() {
               <YAxis
                 tick={{ fontSize: 12 }}
                 label={{
-                  value: "Gas Rate (mcf/mo)",
+                  value: "(mcf/mo)",
                   angle: -90,
                   position: "insideLeft",
                   offset: 10,
@@ -1130,7 +1130,7 @@ export default function Production() {
         {/* Water */}
         <div>
           <h3 className="text-sm font-semibold text-slate-800 mb-2">
-            Water Rate (bbl/mo)
+            Water  (bbl/mo)
           </h3>
           <ResponsiveContainer width="100%" height={260}>
             <LineChart data={derivedSeries.filter((_, i) => i % 2 === 0)}>
@@ -1175,7 +1175,7 @@ export default function Production() {
 =========================================================== */}
       <div className="bg-white rounded-2xl shadow-lg p-6">
         <h3 className="text-lg font-bold text-gray-900 mb-4">
-           Oil Production (bbl)
+           Oil  Cumulative  (bbl)
         </h3>
 
         <ResponsiveContainer width="100%" height={300}>
@@ -1194,7 +1194,7 @@ export default function Production() {
             <YAxis
               tick={{ fontSize: 12 }}
               label={{
-                value: "Cumulative Oil (bbl)",
+                value: "(bbl)",
                 angle: -90,
                 position: "insideLeft",
                 offset: 10,
@@ -1222,7 +1222,7 @@ export default function Production() {
 =========================================================== */}
       <div className="bg-white rounded-2xl shadow-lg p-6">
         <h3 className="text-lg font-bold text-gray-900 mb-4">
-           Gas Production (mcf)
+           Gas Cumulative  (mcf)
         </h3>
 
         <ResponsiveContainer width="100%" height={300}>
