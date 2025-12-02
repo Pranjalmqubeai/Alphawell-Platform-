@@ -126,7 +126,7 @@ export function AlphaWellProvider({ children }) {
     elevationGL: 2995,
     env_fluid_type: "FRESH WATER",
     lateralLength: 4778,
-    predictionHorizon: 30, // years
+    // predictionHorizon: 30, 
   });
 
   const [economicParams, setEconomicParams] = useState({

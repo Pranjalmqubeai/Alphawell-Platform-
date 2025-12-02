@@ -1186,11 +1186,11 @@ export default function ExecutiveSummary() {
           />
           <EconPill
             label="Oil Sev Tax"
-            value={formatEcon(economicParams.oilSevTax)}
+            value={formatEcon(economicParams.oilSeverance)}
           />
           <EconPill
             label="Gas Sev Tax"
-            value={formatEcon(economicParams.gasSevTax)}
+            value={formatEcon(economicParams.gasSeverance)}
           />
         </div>
       </div>

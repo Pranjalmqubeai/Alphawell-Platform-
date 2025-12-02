@@ -1039,7 +1039,7 @@ export default function Production() {
       <div className="bg-white rounded-2xl shadow-lg p-6 space-y-8">
         <div className="flex items-center justify-between">
           <h2 className="text-2xl font-bold text-gray-900">
-            Production Forecast Simulation
+            Production Forecast
           </h2>
         </div>
 
@@ -1063,7 +1063,7 @@ export default function Production() {
               <YAxis
                 tick={{ fontSize: 12 }}
                 label={{
-                  value: "Oil Rate (bbl/mo)",
+                  value: " (bbl/mo)",
                   angle: -90,
                   position: "insideLeft",
                   offset: 10,
@@ -1088,7 +1088,7 @@ export default function Production() {
         {/* Gas */}
         <div>
           <h3 className="text-sm font-semibold text-slate-800 mb-2">
-            Gas Rate (mcf/mo)
+            (mcf/mo)
           </h3>
           <ResponsiveContainer width="100%" height={260}>
             <LineChart data={derivedSeries.filter((_, i) => i % 2 === 0)}>
@@ -1147,7 +1147,7 @@ export default function Production() {
               <YAxis
                 tick={{ fontSize: 12 }}
                 label={{
-                  value: "Water Rate (bbl/mo)",
+                  value: " (bbl/mo)",
                   angle: -90,
                   position: "insideLeft",
                   offset: 10,
@@ -1170,26 +1170,28 @@ export default function Production() {
         </div>
       </div>
 
-      {/* Cumulative Production – separate oil + gas with two colors & units */}
-      {/* ... rest of component unchanged ... */}
-
+      {/* ===========================================================
+    CUMULATIVE OIL — SEPARATE CHART
+=========================================================== */}
       <div className="bg-white rounded-2xl shadow-lg p-6">
         <h3 className="text-lg font-bold text-gray-900 mb-4">
-          Cumulative Production (Oil & Gas)
+           Oil Production (bbl)
         </h3>
 
-        <ResponsiveContainer width="100%" height={350}>
+        <ResponsiveContainer width="100%" height={300}>
           <AreaChart data={derivedSeries.filter((_, i) => i % 3 === 0)}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis
               dataKey="month"
               tick={{ fontSize: 12 }}
-              label={{ value: "Month", position: "insideBottom", offset: -5 }}
+              label={{
+                value: "Month",
+                position: "insideBottom",
+                offset: -5,
+              }}
             />
 
-            {/* Left axis: Oil (bbl) */}
             <YAxis
-              yAxisId="left"
               tick={{ fontSize: 12 }}
               label={{
                 value: "Cumulative Oil (bbl)",
@@ -1199,53 +1201,64 @@ export default function Production() {
               }}
             />
 
-            {/* Right axis: Gas (mcf) */}
-            <YAxis
-              yAxisId="right"
-              orientation="right"
-              tick={{ fontSize: 12 }}
-              label={{
-                value: "Cumulative Gas (mcf)",
-                angle: 90,
-                position: "insideRight",
-                offset: 10,
-              }}
-            />
-
-            <Tooltip
-              formatter={(value, name, props) => {
-                const key = props.dataKey;
-                if (key === "cumulative_oil") {
-                  return [`${formatNumber(value, 0)} bbl`, "Cumulative Oil"];
-                }
-                if (key === "cumulative_gas") {
-                  return [`${formatNumber(value, 0)} mcf`, "Cumulative Gas"];
-                }
-                return [formatNumber(value, 0), name];
-              }}
-            />
+            <Tooltip formatter={(v) => [`${formatNumber(v, 0)} bbl`, "Oil"]} />
             <Legend />
 
-            {/* Cumulative Oil */}
             <Area
-              yAxisId="left"
               type="monotone"
               dataKey="cumulative_oil"
               stroke="#f97316"
               fill="#fed7aa"
-              fillOpacity={0.7}
               name="Cumulative Oil (bbl)"
+              fillOpacity={0.7}
+              dot={false}
+            />
+          </AreaChart>
+        </ResponsiveContainer>
+      </div>
+
+      {/* ===========================================================
+    CUMULATIVE GAS — SEPARATE CHART
+=========================================================== */}
+      <div className="bg-white rounded-2xl shadow-lg p-6">
+        <h3 className="text-lg font-bold text-gray-900 mb-4">
+           Gas Production (mcf)
+        </h3>
+
+        <ResponsiveContainer width="100%" height={300}>
+          <AreaChart data={derivedSeries.filter((_, i) => i % 3 === 0)}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis
+              dataKey="month"
+              tick={{ fontSize: 12 }}
+              label={{
+                value: "Month",
+                position: "insideBottom",
+                offset: -5,
+              }}
             />
 
-            {/* Cumulative Gas */}
+            <YAxis
+              tick={{ fontSize: 12 }}
+              label={{
+                value: "(mcf)",
+                angle: -90,
+                position: "insideLeft",
+                offset: 10,
+              }}
+            />
+
+            <Tooltip formatter={(v) => [`${formatNumber(v, 0)} mcf`, "Gas"]} />
+            <Legend />
+
             <Area
-              yAxisId="right"
               type="monotone"
               dataKey="cumulative_gas"
               stroke="#22c55e"
               fill="#bbf7d0"
-              fillOpacity={0.7}
               name="Cumulative Gas (mcf)"
+              fillOpacity={0.7}
+              dot={false}
             />
           </AreaChart>
         </ResponsiveContainer>
@@ -1254,7 +1267,7 @@ export default function Production() {
       {/* Water Cut Evolution */}
       <div className="bg-white rounded-2xl shadow-lg p-6">
         <h3 className="text-lg font-bold text-gray-900 mb-4">
-          Water Cut Evolution
+          Water Production Forecast 
         </h3>
 
         <ResponsiveContainer width="100%" height={300}>
@@ -1269,7 +1282,7 @@ export default function Production() {
               tick={{ fontSize: 12 }}
               domain={["auto", "auto"]}
               label={{
-                value: "Water Cut (%)",
+                value: "Water (%)",
                 angle: -90,
                 position: "insideLeft",
                 offset: 10,
@@ -1294,7 +1307,7 @@ export default function Production() {
               dataKey="water_cut"
               stroke="#0ea5e9"
               strokeWidth={2}
-              name="Water Cut"
+              name="Water Production"
               dot={false}
               connectNulls
             />
