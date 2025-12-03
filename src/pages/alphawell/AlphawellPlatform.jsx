@@ -1,3 +1,4 @@
+
 // import React, { useEffect, useState } from "react";
 // import {
 //   Save,
@@ -16,6 +17,7 @@
 // import Economic from "./tabs/Economic";
 // import Production from "./tabs/Production";
 // import ExecutiveSummary from "./tabs/ExecutiveSummary";
+// import DownloadResultTab from "./tabs/DownloadResultTab";
 
 // export default function AlphaWellPlatform() {
 //   const {
@@ -40,6 +42,7 @@
 //     { id: "neighborhood", label: "Neighborhood", icon: Map },
 //     { id: "production", label: "Production Forecast", icon: BarChart3 },
 //     { id: "economic", label: "Economic Forecast ", icon: Calculator },
+//     // { id: "download", label: "Download Result", icon: FileText },
 //   ];
 
 //   // Trigger ExecutiveSummary to export PDF (fires a window event the tab listens to)
@@ -78,9 +81,7 @@
 //               <CheckCircle className="w-5 h-5 text-emerald-600" />
 //             </div>
 //             <div className="text-sm">
-//               <p className="font-semibold text-emerald-800">
-//                 Decision saved
-//               </p>
+//               <p className="font-semibold text-emerald-800">Decision saved</p>
 //               <p className="text-emerald-700 text-xs">
 //                 Your scenario and decision have been saved for future reference.
 //               </p>
@@ -94,14 +95,6 @@
 //         <div className="w-full px-6 py-4 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
 //           {/* Left: breadcrumbs + title */}
 //           <div>
-//             <div className="flex items-center gap-2 text-sm text-slate-500">
-//               <span>Dashboard</span>
-//               <ChevronRight className="w-4 h-4 opacity-70" />
-//               <span>AlphaWell</span>
-//               <ChevronRight className="w-4 h-4 opacity-70" />
-//               <span className="font-medium text-slate-800">Well</span>
-//             </div>
-
 //             <h1 className="mt-2 text-2xl md:text-3xl font-extrabold tracking-tight bg-gradient-to-r from-blue-700 to-indigo-700 bg-clip-text text-transparent">
 //               AlphaWell Intelligence
 //             </h1>
@@ -135,8 +128,17 @@
 //             </button>
 
 //             <button
-//               onClick={handlePdf}
-//               className="cursor-pointer inline-flex items-center gap-2 rounded-lg bg-blue-100 px-4 py-2 text-blue-800 font-medium hover:bg-blue-200 transition-all"
+//               onClick={() => {
+//                 if (activeTab === "executive") handlePdf();
+//               }}
+//               disabled={activeTab !== "executive"}
+//               className={`cursor-pointer inline-flex items-center gap-2 rounded-lg px-4 py-2 font-medium transition-all
+//     ${
+//       activeTab === "executive"
+//         ? "bg-blue-100 text-blue-800 hover:bg-blue-200"
+//         : "bg-gray-100 text-gray-400 cursor-not-allowed"
+//     }
+//   `}
 //             >
 //               <FileText className="w-4 h-4" />
 //               Generate PDF
@@ -193,6 +195,7 @@
 //         {activeTab === "neighborhood" && <Neighborhood />}
 //         {activeTab === "production" && <Production />}
 //         {activeTab === "economic" && <Economic />}
+//         {activeTab === "download" && <DownloadResultTab />}
 
 //         {!analyzed && activeTab === "executive" && (
 //           <div className="rounded-2xl border border-dashed border-gray-300 bg-white/60 p-10 text-center">
@@ -225,7 +228,7 @@
 //   );
 // }
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
   Save,
   LogOut,
@@ -260,6 +263,18 @@ export default function AlphaWellPlatform() {
 
   const [showSaveToast, setShowSaveToast] = useState(false);
 
+  // NEW: PDF generation spinner state
+  const [pdfGenerating, setPdfGenerating] = useState(false);
+  const pdfTimeoutRef = useRef(null);
+
+  useEffect(() => {
+    return () => {
+      if (pdfTimeoutRef.current) {
+        clearTimeout(pdfTimeoutRef.current);
+      }
+    };
+  }, []);
+
   if (activeTab === "start") return <StartScreen />;
   if (activeTab === "input") return <InputConfig />;
 
@@ -282,6 +297,27 @@ export default function AlphaWellPlatform() {
     } else {
       window.dispatchEvent(new CustomEvent("aw-export-exec-pdf"));
     }
+  };
+
+  // Wrapper that shows spinner when user clicks "Generate PDF".
+  // Keeps existing logic intact; spinner auto-hides after 4s.
+  const startPdfAndGenerate = () => {
+    if (pdfGenerating) return; // already working
+    setPdfGenerating(true);
+
+    // Kick off generation (keeps original handlePdf logic unchanged)
+    if (activeTab === "executive") {
+      handlePdf();
+    } else {
+      // If you prefer the button to trigger tab switch+generate even when not on executive,
+      // you'd call handlePdf() unconditionally. I kept the original behavior per your request.
+    }
+
+    // auto-hide spinner after 4 seconds
+    pdfTimeoutRef.current = setTimeout(() => {
+      setPdfGenerating(false);
+      pdfTimeoutRef.current = null;
+    }, 4000);
   };
 
   const handleSaveScenario = () => {
@@ -355,19 +391,34 @@ export default function AlphaWellPlatform() {
 
             <button
               onClick={() => {
-                if (activeTab === "executive") handlePdf();
+                // call wrapper which will show spinner and call handlePdf (only triggers when activeTab === 'executive')
+                if (activeTab === "executive") startPdfAndGenerate();
               }}
-              disabled={activeTab !== "executive"}
+              disabled={activeTab !== "executive" || pdfGenerating}
+              aria-disabled={activeTab !== "executive" || pdfGenerating}
               className={`cursor-pointer inline-flex items-center gap-2 rounded-lg px-4 py-2 font-medium transition-all
     ${
       activeTab === "executive"
         ? "bg-blue-100 text-blue-800 hover:bg-blue-200"
         : "bg-gray-100 text-gray-400 cursor-not-allowed"
     }
+    ${pdfGenerating ? "opacity-90 cursor-wait" : ""}
   `}
             >
               <FileText className="w-4 h-4" />
-              Generate PDF
+              {pdfGenerating ? (
+                <>
+                  <span className="inline-flex items-center gap-2">
+                    <span
+                      className="inline-block h-4 w-4 rounded-full border-2 border-white border-t-transparent animate-spin"
+                      aria-hidden="true"
+                    />
+                    Generating...
+                  </span>
+                </>
+              ) : (
+                "Generate PDF"
+              )}
             </button>
 
             <button
