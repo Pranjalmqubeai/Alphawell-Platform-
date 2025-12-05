@@ -646,11 +646,6 @@
 //   );
 // }
 
-
-
-
-
-
 // import React, { useEffect, useState } from "react";
 // import {
 //   ResponsiveContainer,
@@ -1156,15 +1151,6 @@
 //   );
 // }
 
-
-
-
-
-
-
-
-
-
 import React, { useEffect, useState } from "react";
 import {
   ResponsiveContainer,
@@ -1376,27 +1362,25 @@ export default function Economic() {
                 : "—"
             }
           />
-          <WellChar
-            label="TVD"
-            value={
-              wellParams?.tvd
-                ? `${Number(wellParams.tvd).toLocaleString()} ft`
-                : "—"
-            }
-          />
-          <WellChar
-            label="Lateral Length"
-            value={
-              wellParams?.lateralLength
-                ? `${Number(wellParams.lateralLength).toLocaleString()} ft`
-                : "—"
-            }
-          />
+
           <WellChar
             label="Radius"
             value={`${Number(
               wellParams?.radiusMiles != null ? wellParams.radiusMiles : 15
             ).toLocaleString()} mi`}
+          />
+          <WellChar
+            label="Latitude"
+            value={
+              wellParams?.latitude != null ? String(wellParams.latitude) : "-"
+            }
+          />
+
+          <WellChar
+            label="Longitude"
+            value={
+              wellParams?.longitude != null ? String(wellParams.longitude) : "-"
+            }
           />
         </div>
       </div>
@@ -1448,33 +1432,20 @@ export default function Economic() {
       {/* Monthly Cash Flow Components */}
       <div className="bg-white rounded-xl shadow-lg p-6">
         <h3 className="text-lg font-bold text-gray-900 mb-4">
-          Monthly Cash Flow Components
+          Monthly Cash Flow Components{" "}
+          <span className="font-normal">($/month)</span>
         </h3>
 
         {loadingCash && !monthlyCashFlowChart.length ? (
           <p className="text-sm text-slate-500">Loading cash flow…</p>
         ) : (
           <ResponsiveContainer width="100%" height={400}>
-            <LineChart data={monthlyCashFlowChart.filter((_, i) => i % 6 === 0)}>
+            <LineChart
+              data={monthlyCashFlowChart.filter((_, i) => i % 6 === 0)}
+            >
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis
-                dataKey="month"
-                tick={{ fontSize: 12 }}
-                label={{
-                  value: "Month",
-                  position: "insideBottom",
-                  offset: -5,
-                }}
-              />
-              <YAxis
-                tick={{ fontSize: 12 }}
-                label={{
-                  value: "US$",
-                  angle: -90,
-                  position: "insideLeft",
-                  offset: 10,
-                }}
-              />
+              <XAxis dataKey="month" tick={{ fontSize: 12 }} />
+              <YAxis tick={{ fontSize: 12 }} />
               <Tooltip
                 formatter={(value, name) => [
                   `$${Number(value).toLocaleString(undefined, {
@@ -1516,7 +1487,7 @@ export default function Economic() {
       {/* NPV Buildup Over Time */}
       <div className="bg-white rounded-xl shadow-lg p-6">
         <h3 className="text-lg font-bold text-gray-900 mb-4">
-          NPV Buildup Over Time
+          NPV Buildup Over Time<span className="font-normal">($/month)</span>
         </h3>
 
         {loadingCash && !npvChart.length ? (
@@ -1525,24 +1496,8 @@ export default function Economic() {
           <ResponsiveContainer width="100%" height={350}>
             <AreaChart data={npvChart.filter((_, i) => i % 3 === 0)}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis
-                dataKey="month"
-                tick={{ fontSize: 12 }}
-                label={{
-                  value: "Month",
-                  position: "insideBottom",
-                  offset: -5,
-                }}
-              />
-              <YAxis
-                tick={{ fontSize: 12 }}
-                label={{
-                  value: "NPV (US$)",
-                  angle: -90,
-                  position: "insideLeft",
-                  offset: 10,
-                }}
-              />
+              <XAxis dataKey="month" tick={{ fontSize: 12 }} />
+              <YAxis tick={{ fontSize: 12 }} />
               <Tooltip
                 formatter={(value) => [
                   `$${Number(value).toLocaleString(undefined, {
@@ -1610,7 +1565,7 @@ function SumCard({ title, value, accent = "text-slate-900", desc }) {
       </p>
 
       {/* Middle: numeric value (largest + colored) */}
-      <p className={`mt-1 text-3xl md:text-4xl font-extrabold ${accent}`}>
+      <p className={`mt-1 text-2xl md:text-3xl font-extrabold ${accent}`}>
         {value}
       </p>
 

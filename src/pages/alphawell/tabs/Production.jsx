@@ -1046,7 +1046,7 @@ export default function Production() {
         {/* Oil */}
         <div>
           <h3 className="text-sm font-semibold text-slate-800 mb-2">
-            Oil  (bbl/mo)
+            Oil  (bbl/month)
           </h3>
           <ResponsiveContainer width="100%" height={260}>
             <LineChart data={derivedSeries.filter((_, i) => i % 2 === 0)}>
@@ -1063,7 +1063,7 @@ export default function Production() {
               <YAxis
                 tick={{ fontSize: 12 }}
                 label={{
-                  value: " (bbl/mo)",
+                  // value: " (bbl/mo)",
                   angle: -90,
                   position: "insideLeft",
                   offset: 10,
@@ -1088,7 +1088,7 @@ export default function Production() {
         {/* Gas */}
         <div>
           <h3 className="text-sm font-semibold text-slate-800 mb-2">
-           Gas (mcf/mo)
+           Gas (mcf/month)
           </h3>
           <ResponsiveContainer width="100%" height={260}>
             <LineChart data={derivedSeries.filter((_, i) => i % 2 === 0)}>
@@ -1096,16 +1096,12 @@ export default function Production() {
               <XAxis
                 dataKey="month"
                 tick={{ fontSize: 12 }}
-                label={{
-                  value: "Month",
-                  position: "insideBottom",
-                  offset: -5,
-                }}
+                
               />
               <YAxis
                 tick={{ fontSize: 12 }}
                 label={{
-                  value: "(mcf/mo)",
+                  // value: "(mcf/mo)",
                   angle: -90,
                   position: "insideLeft",
                   offset: 10,
@@ -1130,7 +1126,7 @@ export default function Production() {
         {/* Water */}
         <div>
           <h3 className="text-sm font-semibold text-slate-800 mb-2">
-            Water  (bbl/mo)
+            Water  (bbl/month)
           </h3>
           <ResponsiveContainer width="100%" height={260}>
             <LineChart data={derivedSeries.filter((_, i) => i % 2 === 0)}>
@@ -1139,7 +1135,7 @@ export default function Production() {
                 dataKey="month"
                 tick={{ fontSize: 12 }}
                 label={{
-                  value: "Month",
+                  // value: "Month",
                   position: "insideBottom",
                   offset: -5,
                 }}
@@ -1147,7 +1143,7 @@ export default function Production() {
               <YAxis
                 tick={{ fontSize: 12 }}
                 label={{
-                  value: " (bbl/mo)",
+                  // value: " (bbl/mo)",
                   angle: -90,
                   position: "insideLeft",
                   offset: 10,
@@ -1175,7 +1171,7 @@ export default function Production() {
 =========================================================== */}
       <div className="bg-white rounded-2xl shadow-lg p-6">
         <h3 className="text-lg font-bold text-gray-900 mb-4">
-           Oil  Cumulative  (bbl)
+           Oil  Cumulative  (bbl/month)
         </h3>
 
         <ResponsiveContainer width="100%" height={300}>
@@ -1184,21 +1180,12 @@ export default function Production() {
             <XAxis
               dataKey="month"
               tick={{ fontSize: 12 }}
-              label={{
-                value: "Month",
-                position: "insideBottom",
-                offset: -5,
-              }}
+              
             />
 
             <YAxis
               tick={{ fontSize: 12 }}
-              label={{
-                value: "(bbl)",
-                angle: -90,
-                position: "insideLeft",
-                offset: 10,
-              }}
+            
             />
 
             <Tooltip formatter={(v) => [`${formatNumber(v, 0)} bbl`, "Oil"]} />
@@ -1209,7 +1196,7 @@ export default function Production() {
               dataKey="cumulative_oil"
               stroke="#f97316"
               fill="#fed7aa"
-              name="Cumulative Oil (bbl)"
+              name="Cumulative Oil (bbl/mo)"
               fillOpacity={0.7}
               dot={false}
             />
@@ -1222,7 +1209,7 @@ export default function Production() {
 =========================================================== */}
       <div className="bg-white rounded-2xl shadow-lg p-6">
         <h3 className="text-lg font-bold text-gray-900 mb-4">
-           Gas Cumulative  (mcf)
+           Gas Cumulative  (mcf/month)
         </h3>
 
         <ResponsiveContainer width="100%" height={300}>
@@ -1231,21 +1218,12 @@ export default function Production() {
             <XAxis
               dataKey="month"
               tick={{ fontSize: 12 }}
-              label={{
-                value: "Month",
-                position: "insideBottom",
-                offset: -5,
-              }}
+              
             />
 
             <YAxis
               tick={{ fontSize: 12 }}
-              label={{
-                value: "(mcf)",
-                angle: -90,
-                position: "insideLeft",
-                offset: 10,
-              }}
+              
             />
 
             <Tooltip formatter={(v) => [`${formatNumber(v, 0)} mcf`, "Gas"]} />
@@ -1256,7 +1234,7 @@ export default function Production() {
               dataKey="cumulative_gas"
               stroke="#22c55e"
               fill="#bbf7d0"
-              name="Cumulative Gas (mcf)"
+              name="Cumulative Gas (mcf/mo)"
               fillOpacity={0.7}
               dot={false}
             />
@@ -1267,7 +1245,7 @@ export default function Production() {
       {/* Water Cut Evolution */}
       <div className="bg-white rounded-2xl shadow-lg p-6">
         <h3 className="text-lg font-bold text-gray-900 mb-4">
-          Water Production Forecast 
+          Water Production Forecast (% / month)
         </h3>
 
         <ResponsiveContainer width="100%" height={300}>
@@ -1276,17 +1254,12 @@ export default function Production() {
             <XAxis
               dataKey="month"
               tick={{ fontSize: 12 }}
-              label={{ value: "Month", position: "insideBottom", offset: -5 }}
+              
             />
             <YAxis
               tick={{ fontSize: 12 }}
               domain={["auto", "auto"]}
-              label={{
-                value: "Water (%)",
-                angle: -90,
-                position: "insideLeft",
-                offset: 10,
-              }}
+              
               tickFormatter={(v) =>
                 waterCutIsFraction
                   ? `${(v * 100).toFixed(0)}%`
@@ -1346,7 +1319,7 @@ function NumberTile({
       </div>
 
       {/* Middle: numeric value (largest) */}
-      <p className={`mt-1 text-3xl md:text-4xl font-extrabold ${valueColor}`}>
+      <p className={`mt-1 text-3xl md:text-3xl font-extrabold ${valueColor}`}>
         {value}
       </p>
 
