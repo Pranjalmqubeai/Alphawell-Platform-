@@ -2476,7 +2476,7 @@ export default function ExecutiveSummary() {
                 : "—"
             }
           />
-          
+
           <EconPill
             label="Radius"
             value={`${Number(
@@ -2604,13 +2604,13 @@ export default function ExecutiveSummary() {
         />
 
         <KpiCard
-          title="EUR Oil"
+          title=" Oil EUR"
           icon={<Droplet className="text-orange-600" />}
           value={
             <>
               {(kpis.eurOil / 1000).toFixed(0)}K
               <span className="text-gray-500 text-2xl font-normal ml-2">
-                (bbl)
+                bbl
               </span>
             </>
           }
@@ -2619,13 +2619,13 @@ export default function ExecutiveSummary() {
         />
 
         <KpiCard
-          title="EUR Gas"
+          title=" Gas EUR"
           icon={<Zap className="text-purple-600" />}
           value={
             <>
               {(kpis.eurGas / 1000).toFixed(0)}K
               <span className="text-gray-500 text-2xl font-normal ml-2">
-                (mcf)
+                mcf
               </span>
             </>
           }
@@ -2633,6 +2633,22 @@ export default function ExecutiveSummary() {
           valueColor="text-purple-600"
         />
 
+        
+
+        <KpiCard
+          title="Water"
+          icon={<Droplet className="text-sky-600" />}
+          value={
+            <>
+              {(totalWater / 1000).toFixed(0)}K
+              <span className="text-gray-500 text-2xl font-normal ml-1">
+                bbl
+              </span>
+            </>
+          }
+          desc="Total Produced Water"
+          valueColor="text-sky-600"
+        />
         <KpiCard
           title="Total CO₂"
           icon={<Zap className="text-emerald-600" />}
@@ -2640,33 +2656,28 @@ export default function ExecutiveSummary() {
             <>
               {kpis.totalCO2.toFixed(0)}{" "}
               <span className="text-gray-500 text-2xl font-normal ml-1">
-                (tons)
+                tons
               </span>
             </>
           }
+          desc="Total CO₂ Emissions"
           valueColor="text-emerald-600"
-        />
-
-        <KpiCard
-          title="Total Water"
-          icon={<Droplet className="text-sky-600" />}
-          value={
-            <>
-              {(totalWater / 1000).toFixed(0)}K
-              <span className="text-gray-500 text-2xl font-normal ml-1">
-                (bbl)
-              </span>
-            </>
-          }
-          // desc="Estimated Ultimate Recovery"
-          valueColor="text-sky-600"
         />
 
         <KpiCard
           title="Payback"
           icon={<Calendar className="text-sky-600" />}
-          value={kpis.paybackMonths ?? "—"}
-          desc="months"
+          value={
+            kpis.paybackMonths !== null && kpis.paybackMonths !== undefined ? (
+              <>
+                {kpis.paybackMonths}{" "}
+                <span className="text-gray-500 text-2xl font-normal ml-2">months</span>
+              </>
+            ) : (
+              "—"
+            )
+          }
+          desc="Payback Period"
           valueColor="text-sky-600"
         />
       </div>

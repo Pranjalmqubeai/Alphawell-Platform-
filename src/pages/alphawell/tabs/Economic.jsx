@@ -1922,7 +1922,12 @@ export default function Economic() {
         </h3>
         <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-3">
           <SumCard
-            title="NPV"
+            title=<>
+              NPV{" "}
+              <span className="text-gray-500 font-semibold">
+                (for 1st Month)
+              </span>
+            </>
             value={`$${npvDisplay}`}
             desc="Net Present Value"
             accent="text-indigo-600"
@@ -1935,23 +1940,40 @@ export default function Economic() {
           />
           <SumCard
             title="Payback Period"
-            value={paybackDisplay}
-            desc="Months"
+            value={
+              paybackDisplay ? (
+                <>
+                  {paybackDisplay}{" "}
+                  <span className="text-gray-500 text-2xl font-normal ml-2">
+                    months
+                  </span>
+                </>
+              ) : (
+                "—"
+              )
+            }
+            desc="Payback Period"
             accent="text-amber-600"
           />
+
           <SumCard
             title="Total OPEX"
             value={totalOpexDisplay}
+            desc="Operating Expenses"
             accent="text-rose-600"
           />
+
           <SumCard
             title="Total Tax"
             value={totalTaxDisplay}
+            desc="Total Project Tax"
             accent="text-orange-600"
           />
+
           <SumCard
             title="Net Cash Flow"
             value={netCFDisplay}
+            desc="After-Tax Cash Flow"
             accent="text-blue-600"
           />
         </div>

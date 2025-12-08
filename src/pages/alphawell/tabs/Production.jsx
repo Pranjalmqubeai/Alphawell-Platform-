@@ -763,43 +763,6 @@
 //   );
 // }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // import React, { useState, useEffect, useMemo } from "react";
 // import {
 //   ResponsiveContainer,
@@ -1133,7 +1096,7 @@
 //               <XAxis
 //                 dataKey="month"
 //                 tick={{ fontSize: 12 }}
-                
+
 //               />
 //               <YAxis
 //                 tick={{ fontSize: 12 }}
@@ -1217,12 +1180,12 @@
 //             <XAxis
 //               dataKey="month"
 //               tick={{ fontSize: 12 }}
-              
+
 //             />
 
 //             <YAxis
 //               tick={{ fontSize: 12 }}
-            
+
 //             />
 
 //             <Tooltip formatter={(v) => [`${formatNumber(v, 0)} bbl`, "Oil"]} />
@@ -1255,12 +1218,12 @@
 //             <XAxis
 //               dataKey="month"
 //               tick={{ fontSize: 12 }}
-              
+
 //             />
 
 //             <YAxis
 //               tick={{ fontSize: 12 }}
-              
+
 //             />
 
 //             <Tooltip formatter={(v) => [`${formatNumber(v, 0)} mcf`, "Gas"]} />
@@ -1291,12 +1254,12 @@
 //             <XAxis
 //               dataKey="month"
 //               tick={{ fontSize: 12 }}
-              
+
 //             />
 //             <YAxis
 //               tick={{ fontSize: 12 }}
 //               domain={["auto", "auto"]}
-              
+
 //               tickFormatter={(v) =>
 //                 waterCutIsFraction
 //                   ? `${(v * 100).toFixed(0)}%`
@@ -1367,7 +1330,6 @@
 //     </div>
 //   );
 // }
-
 
 import React, { useState, useEffect, useMemo } from "react";
 import {
@@ -1567,15 +1529,11 @@ export default function Production() {
             label="Abstract ID"
             value={wellParams.abstractId || "—"}
           />
-          
-          
-          
+
           <LocationTile
             label="Latitude"
             value={
-              wellParams.latitude != null
-                ? wellParams.latitude.toFixed(4)
-                : "—"
+              wellParams.latitude != null ? wellParams.latitude.toFixed(4) : "—"
             }
           />
           <LocationTile
@@ -1600,10 +1558,7 @@ export default function Production() {
                 : "HORIZONTAL"
             }
           />
-          <LocationTile
-            label="Formation"
-            value={wellParams.formation || "—"}
-          />
+          <LocationTile label="Formation" value={wellParams.formation || "—"} />
           <LocationTile
             label="Prediction Horizon"
             value={
@@ -1612,7 +1567,6 @@ export default function Production() {
                 : "360 months"
             }
           />
-          
         </div>
       </div>
 
@@ -1633,76 +1587,82 @@ export default function Production() {
         <div className="grid gap-4 md:grid-cols-3">
           {/* Totals */}
           <NumberTile
-            title="Total Oil EUR"
+            title="Oil EUR "
             value={
-              <span className="text-orange-600">
+              <span className="text-orange-600 font-bold">
                 {formatNumber(productionMetrics.total_oil_eur, 0)}
                 <span className="text-gray-500 text-2xl font-normal ml-2">
-                  (bbl)
+                  bbl
                 </span>
               </span>
             }
+            desc="Estimated Ultimate Recovery"
           />
 
           <NumberTile
-            title="Total Gas EUR"
+            title="Gas EUR"
             value={
-              <span className="text-purple-600">
+              <span className="text-purple-600 font-bold">
                 {formatNumber(productionMetrics.total_gas_eur, 0)}
                 <span className="text-gray-500 text-2xl font-normal ml-2">
-                  (mcf)
+                  mcf
                 </span>
               </span>
             }
+            desc="Estimated Ultimate Recovery"
           />
 
           <NumberTile
-            title="Total Water"
+            title="Water"
             value={
-              <span className="text-sky-600">
+              <span className="text-sky-600 font-bold">
                 {formatNumber(productionMetrics.total_water, 0)}
                 <span className="text-gray-500 text-2xl font-normal ml-2">
-                  (bbl)
+                  bbl
                 </span>
               </span>
             }
+            desc="Total Produced Water"
           />
 
           {/* Year 1 */}
           <NumberTile
             title="Year 1 Oil Production"
             value={
-              <span className="text-orange-600">
+              <span className="text-orange-600 font-bold">
                 {formatNumber(productionMetrics.year1_oil, 0)}
                 <span className="text-gray-500 text-2xl font-normal ml-2">
-                  (bbl)
+                  bbl
                 </span>
               </span>
             }
+            desc="Year 1 Production"
           />
 
           <NumberTile
             title="Year 1 Gas Production"
             value={
-              <span className="text-purple-600">
+              <span className="text-purple-600 font-bold">
                 {formatNumber(productionMetrics.year1_gas, 0)}
                 <span className="text-gray-500 text-2xl font-normal ml-2">
-                  (mcf)
+                  mcf
                 </span>
               </span>
             }
+            desc="Year 1 Production"
           />
 
           <NumberTile
             title="Year 1 Water Production"
             value={
-              <span className="text-sky-600">
+              <span className="text-sky-600 font-bold">
                 {formatNumber(productionMetrics.year1_water, 0)}
                 <span className="text-gray-500 text-2xl font-normal ml-2">
-                  (bbl)
+                  bbl
                 </span>
               </span>
             }
+            desc="Year 1 Production"
           />
         </div>
       </div>
@@ -1720,7 +1680,7 @@ export default function Production() {
         {/* Oil */}
         <div>
           <h3 className="text-sm font-semibold text-slate-800 mb-2">
-            Oil  (bbl/month)
+            Oil (bbl/month)
           </h3>
           <ResponsiveContainer width="100%" height={260}>
             <LineChart data={derivedSeries.filter((_, i) => i % 2 === 0)}>
@@ -1762,15 +1722,12 @@ export default function Production() {
         {/* Gas */}
         <div>
           <h3 className="text-sm font-semibold text-slate-800 mb-2">
-           Gas (mcf/month)
+            Gas (mcf/month)
           </h3>
           <ResponsiveContainer width="100%" height={260}>
             <LineChart data={derivedSeries.filter((_, i) => i % 2 === 0)}>
               <CartesianGrid strokeDasharray="3 3" />
-              <XAxis
-                dataKey="month"
-                tick={{ fontSize: 12 }}
-              />
+              <XAxis dataKey="month" tick={{ fontSize: 12 }} />
               <YAxis
                 tick={{ fontSize: 12 }}
                 label={{
@@ -1799,7 +1756,7 @@ export default function Production() {
         {/* Water */}
         <div>
           <h3 className="text-sm font-semibold text-slate-800 mb-2">
-            Water  (bbl/month)
+            Water (bbl/month)
           </h3>
           <ResponsiveContainer width="100%" height={260}>
             <LineChart data={derivedSeries.filter((_, i) => i % 2 === 0)}>
@@ -1842,19 +1799,14 @@ export default function Production() {
       {/* Cumulative Oil */}
       <div className="bg-white rounded-2xl shadow-lg p-6">
         <h3 className="text-lg font-bold text-gray-900 mb-4">
-           Oil  Cumulative  (bbl/month)
+          Oil Cumulative (bbl/month)
         </h3>
 
         <ResponsiveContainer width="100%" height={300}>
           <AreaChart data={derivedSeries.filter((_, i) => i % 3 === 0)}>
             <CartesianGrid strokeDasharray="3 3" />
-            <XAxis
-              dataKey="month"
-              tick={{ fontSize: 12 }}
-            />
-            <YAxis
-              tick={{ fontSize: 12 }}
-            />
+            <XAxis dataKey="month" tick={{ fontSize: 12 }} />
+            <YAxis tick={{ fontSize: 12 }} />
             <Tooltip formatter={(v) => [`${formatNumber(v, 0)} bbl`, "Oil"]} />
             <Legend />
             <Area
@@ -1873,19 +1825,14 @@ export default function Production() {
       {/* Cumulative Gas */}
       <div className="bg-white rounded-2xl shadow-lg p-6">
         <h3 className="text-lg font-bold text-gray-900 mb-4">
-           Gas Cumulative  (mcf/month)
+          Gas Cumulative (mcf/month)
         </h3>
 
         <ResponsiveContainer width="100%" height={300}>
           <AreaChart data={derivedSeries.filter((_, i) => i % 3 === 0)}>
             <CartesianGrid strokeDasharray="3 3" />
-            <XAxis
-              dataKey="month"
-              tick={{ fontSize: 12 }}
-            />
-            <YAxis
-              tick={{ fontSize: 12 }}
-            />
+            <XAxis dataKey="month" tick={{ fontSize: 12 }} />
+            <YAxis tick={{ fontSize: 12 }} />
             <Tooltip formatter={(v) => [`${formatNumber(v, 0)} mcf`, "Gas"]} />
             <Legend />
             <Area
@@ -1910,10 +1857,7 @@ export default function Production() {
         <ResponsiveContainer width="100%" height={300}>
           <LineChart data={derivedSeries.filter((_, i) => i % 3 === 0)}>
             <CartesianGrid strokeDasharray="3 3" />
-            <XAxis
-              dataKey="month"
-              tick={{ fontSize: 12 }}
-            />
+            <XAxis dataKey="month" tick={{ fontSize: 12 }} />
             <YAxis
               tick={{ fontSize: 12 }}
               domain={["auto", "auto"]}
@@ -1955,6 +1899,7 @@ function NumberTile({
   title,
   value,
   unit,
+  desc, // 👈 add this
   valueColor = "text-slate-900",
   chipLabel,
   chipColor = "bg-slate-100 text-slate-700",
@@ -1973,12 +1918,22 @@ function NumberTile({
           </span>
         )}
       </div>
+
       <p className={`mt-1 text-3xl md:text-3xl font-extrabold ${valueColor}`}>
         {value}
       </p>
+
+      {/* optional unit if you still use it elsewhere */}
       {unit && (
-        <p className="mt-2 text-lg md:text-xl font-semibold text-slate-500">
+        <p className="mt-1 text-lg md:text-xl font-semibold text-slate-500">
           {unit}
+        </p>
+      )}
+
+      {/* 👇 NEW: description line like “Estimated Ultimate Recovery” */}
+      {desc && (
+        <p className="mt-2 text-lg md:text-xl font-semibold text-slate-500">
+          {desc}
         </p>
       )}
     </div>
@@ -1990,9 +1945,7 @@ function LocationTile({ label, value }) {
   return (
     <div className="flex items-center justify-between rounded-lg bg-slate-50 px-4 py-2.5 text-sm">
       <span className="text-slate-500 font-medium">{label}</span>
-      <span className="text-slate-900 font-semibold tabular-nums">
-        {value}
-      </span>
+      <span className="text-slate-900 font-semibold tabular-nums">{value}</span>
     </div>
   );
 }

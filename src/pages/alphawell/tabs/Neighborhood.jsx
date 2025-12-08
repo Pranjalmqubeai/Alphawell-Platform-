@@ -1607,18 +1607,11 @@ const targetIcon = L.divIcon({
   iconAnchor: [12, 12],
 });
 
-function createWellIcon(inRadius, showBlink) {
+function createWellIcon(inRadius) {
   const baseColor = inRadius ? "bg-emerald-500" : "bg-slate-400";
-  const pingColor = inRadius ? "bg-emerald-300" : "bg-slate-300";
-
-  const pingHtml =
-    showBlink && inRadius
-      ? `<span class="absolute inline-flex h-5 w-5 rounded-full ${pingColor} opacity-75 animate-ping"></span>`
-      : "";
 
   const html = `
     <div class="relative">
-      ${pingHtml}
       <span class="relative inline-flex rounded-full h-3 w-3 ${baseColor} border-2 border-white shadow-sm"></span>
     </div>
   `;
@@ -1630,6 +1623,7 @@ function createWellIcon(inRadius, showBlink) {
     iconAnchor: [10, 10],
   });
 }
+
 
 export default function Neighborhood() {
   const { wellParams, currentUser } = useAlphaWell();
