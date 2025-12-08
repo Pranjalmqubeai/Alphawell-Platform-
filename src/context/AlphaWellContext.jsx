@@ -126,7 +126,7 @@ export function AlphaWellProvider({ children }) {
     elevationGL: 2995,
     env_fluid_type: "FRESH WATER",
     lateralLength: 4778,
-    // predictionHorizon: 30, 
+    // predictionHorizon: 30,
   });
 
   const [economicParams, setEconomicParams] = useState({
@@ -328,7 +328,7 @@ export function AlphaWellProvider({ children }) {
   //     include_confidence: true,
   //   };
   // };
- const buildAnalyzePayload = (overrides = {}) => {
+  const buildAnalyzePayload = (overrides = {}) => {
     // Allow overrides from callers (ExecParamsModal) but fallback to context state
     const well = overrides.wellParams ?? wellParams;
     const econ = overrides.economicParams ?? economicParams;
@@ -384,9 +384,7 @@ export function AlphaWellProvider({ children }) {
       },
 
       carbon_params: {
-        processing_intensity_factor: Number(
-          carbon.processingIntensity ?? 1
-        ),
+        processing_intensity_factor: Number(carbon.processingIntensity ?? 1),
         flaring_percentage: Number((carbon.flarePercent ?? 0) * 100),
         carbon_price_per_ton: Number(carbon.carbonPrice ?? 50),
       },
@@ -520,7 +518,9 @@ export function AlphaWellProvider({ children }) {
         longitude: Number(overrides.longitude ?? wellParams.longitude),
         radius_mi: Number(overrides.radius_mi ?? 5),
         initial_date: overrides.initial_date || "2020-01-01",
+        number_of_wells: Number(overrides.number_of_wells ?? 1500), // 👈 NEW
       };
+      
 
       console.log("[Neighborhood] request payload:", payload);
 
@@ -581,7 +581,7 @@ export function AlphaWellProvider({ children }) {
   };
 
   /** ---------- Analysis (live) ---------- */
-    /** ---------- Analysis (live) ---------- */
+  /** ---------- Analysis (live) ---------- */
   const analyze = async (overrides = {}) => {
     if (isAnalyzing) return;
 
@@ -611,7 +611,11 @@ export function AlphaWellProvider({ children }) {
       console.log("[AlphaWell] /api/analysis/analyze response:", data);
       setLastApiResponse(data);
 
-      const { prod, econ: econSeries, carbon: carbonSeries } = adaptAnalysis(data);
+      const {
+        prod,
+        econ: econSeries,
+        carbon: carbonSeries,
+      } = adaptAnalysis(data);
 
       const haveProd = prod.length > 0;
       const haveEcon = econSeries.length > 0;
@@ -662,7 +666,6 @@ export function AlphaWellProvider({ children }) {
       setIsAnalyzing(false);
     }
   };
-
 
   const resetAnalysis = () => {
     setProductionData([]);
