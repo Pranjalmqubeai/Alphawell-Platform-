@@ -1509,7 +1509,7 @@ export default function Production() {
   }
 
   return (
-    <div className="space-y-6">
+    <div id="production-summary" className="space-y-6">
       {/* ==========================================================
           PROPOSED WELL LOCATION (same concept as Exec Summary)
       =========================================================== */}

@@ -1843,7 +1843,7 @@ export default function Economic() {
   const baselineNpvM = Number(npvToM(npvRaw));
 
   return (
-    <div className="space-y-6">
+    <div  id="economic-summary" className="space-y-6">
       {/* ==========================================================
           PROPOSED WELL LOCATION (same as Production order)
       =========================================================== */}

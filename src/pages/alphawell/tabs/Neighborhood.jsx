@@ -1610,7 +1610,7 @@ export default function Neighborhood() {
 
   // ================== LAYOUT ==================
   return (
-    <div className="min-h-[70vh] w-full">
+    <div id="neighborhood-summary"className="min-h-[70vh] w-full">
       <div className="flex flex-col xl:flex-row gap-6 items-start w-full">
         {/* LEFT SIDEBAR */}
         <aside className="w-full xl:max-w-sm xl:flex-shrink-0 bg-white rounded-2xl shadow-md border border-slate-100 p-5 xl:sticky xl:top-28">

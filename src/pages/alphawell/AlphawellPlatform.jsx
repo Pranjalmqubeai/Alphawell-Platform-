@@ -1,4 +1,3 @@
-
 // import React, { useEffect, useState } from "react";
 // import {
 //   Save,
@@ -247,6 +246,7 @@ import Economic from "./tabs/Economic";
 import Production from "./tabs/Production";
 import ExecutiveSummary from "./tabs/ExecutiveSummary";
 import DownloadResultTab from "./tabs/DownloadResultTab";
+import { exportAllTabsToPDF } from "../../utils/ExportFullPdf";
 
 export default function AlphaWellPlatform() {
   const {
@@ -266,6 +266,22 @@ export default function AlphaWellPlatform() {
   // NEW: PDF generation spinner state
   const [pdfGenerating, setPdfGenerating] = useState(false);
   const pdfTimeoutRef = useRef(null);
+
+  useEffect(() => {
+    const handler = async () => {
+      try {
+        setPdfGenerating(true);
+        await exportAllTabsToPDF(
+          `AlphaWell_Full_Report_${wellParams.wellId || "Well"}.pdf`
+        );
+      } finally {
+        setPdfGenerating(false);
+      }
+    };
+
+    window.addEventListener("aw-export-full-pdf", handler);
+    return () => window.removeEventListener("aw-export-full-pdf", handler);
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -302,22 +318,15 @@ export default function AlphaWellPlatform() {
   // Wrapper that shows spinner when user clicks "Generate PDF".
   // Keeps existing logic intact; spinner auto-hides after 4s.
   const startPdfAndGenerate = () => {
-    if (pdfGenerating) return; // already working
+    if (pdfGenerating) return;
+
     setPdfGenerating(true);
 
-    // Kick off generation (keeps original handlePdf logic unchanged)
-    if (activeTab === "executive") {
-      handlePdf();
-    } else {
-      // If you prefer the button to trigger tab switch+generate even when not on executive,
-      // you'd call handlePdf() unconditionally. I kept the original behavior per your request.
-    }
+    window.dispatchEvent(new CustomEvent("aw-export-full-pdf"));
 
-    // auto-hide spinner after 4 seconds
     pdfTimeoutRef.current = setTimeout(() => {
       setPdfGenerating(false);
-      pdfTimeoutRef.current = null;
-    }, 4000);
+    }, 5000);
   };
 
   const handleSaveScenario = () => {
@@ -390,35 +399,11 @@ export default function AlphaWellPlatform() {
             </button>
 
             <button
-              onClick={() => {
-                // call wrapper which will show spinner and call handlePdf (only triggers when activeTab === 'executive')
-                if (activeTab === "executive") startPdfAndGenerate();
-              }}
-              disabled={activeTab !== "executive" || pdfGenerating}
-              aria-disabled={activeTab !== "executive" || pdfGenerating}
-              className={`cursor-pointer inline-flex items-center gap-2 rounded-lg px-4 py-2 font-medium transition-all
-    ${
-      activeTab === "executive"
-        ? "bg-blue-100 text-blue-800 hover:bg-blue-200"
-        : "bg-gray-100 text-gray-400 cursor-not-allowed"
-    }
-    ${pdfGenerating ? "opacity-90 cursor-wait" : ""}
-  `}
+              onClick={startPdfAndGenerate}
+              className="cursor-pointer inline-flex items-center gap-2 rounded-lg px-4 py-2 font-medium bg-blue-100 text-blue-800 hover:bg-blue-200"
             >
               <FileText className="w-4 h-4" />
-              {pdfGenerating ? (
-                <>
-                  <span className="inline-flex items-center gap-2">
-                    <span
-                      className="inline-block h-4 w-4 rounded-full border-2 border-white border-t-transparent animate-spin"
-                      aria-hidden="true"
-                    />
-                    Generating...
-                  </span>
-                </>
-              ) : (
-                "Generate PDF"
-              )}
+              {pdfGenerating ? "Generating..." : "Generate  PDF"}
             </button>
 
             <button

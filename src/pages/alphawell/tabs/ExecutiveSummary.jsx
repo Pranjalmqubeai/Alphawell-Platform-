@@ -2326,10 +2326,26 @@ export default function ExecutiveSummary() {
   /* -----------------------------------------
       Download CSV for summary table
   ------------------------------------------*/
+  /* -----------------------------------------
+      Download CSV for summary table
+      (current page + visible columns only)
+  ------------------------------------------*/
   const handleDownloadSummaryCsv = () => {
     if (!summaryRows.length) return;
 
-    const headers = Object.keys(summaryRows[0]);
+    // Columns that are actually shown in the table (no date columns)
+    const allCols = Object.keys(summaryRows[0]);
+    const visibleCols = allCols.filter(
+      (col) => !col.toLowerCase().includes("date")
+    );
+
+    // Only the rows currently visible on the page
+    const start = (currentPage - 1) * rowsPerPage;
+    const end = start + rowsPerPage;
+    // const rowsToExport = summaryRows.slice(start, end);
+    const rowsToExport = summaryRows;
+
+
     const escapeVal = (v) => {
       if (v === null || v === undefined) return "";
       const s = String(v);
@@ -2340,9 +2356,18 @@ export default function ExecutiveSummary() {
     };
 
     const csvLines = [];
-    csvLines.push(headers.join(","));
-    summaryRows.forEach((row) => {
-      const line = headers.map((h) => escapeVal(row[h])).join(",");
+
+    // Header row (pretty labels, like the table header)
+    csvLines.push(visibleCols.map((col) => col.replace(/_/g, " ")).join(","));
+
+    // Data rows (formatted like UI: 2 decimals etc.)
+    rowsToExport.forEach((row) => {
+      const line = visibleCols
+        .map((col) => {
+          const formatted = formatSummaryCell(col, row[col]);
+          return escapeVal(formatted);
+        })
+        .join(",");
       csvLines.push(line);
     });
 
@@ -2352,7 +2377,9 @@ export default function ExecutiveSummary() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `alphawell-summary-report-${wellParams.wellId || "well"}.csv`;
+    a.download = `alphawell-summary-report-${
+      wellParams.wellId || "well"
+    }-page-${currentPage}.csv`;
     document.body.appendChild(a);
     a.click();
     a.remove();
@@ -2633,8 +2660,6 @@ export default function ExecutiveSummary() {
           valueColor="text-purple-600"
         />
 
-        
-
         <KpiCard
           title="Water"
           icon={<Droplet className="text-sky-600" />}
@@ -2671,7 +2696,9 @@ export default function ExecutiveSummary() {
             kpis.paybackMonths !== null && kpis.paybackMonths !== undefined ? (
               <>
                 {kpis.paybackMonths}{" "}
-                <span className="text-gray-500 text-2xl font-normal ml-2">months</span>
+                <span className="text-gray-500 text-2xl font-normal ml-2">
+                  months
+                </span>
               </>
             ) : (
               "—"
