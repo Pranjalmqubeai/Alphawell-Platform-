@@ -2105,6 +2105,7 @@ import {
 import { useAlphaWell } from "../../../context/AlphaWellContext";
 import { exportElementToPDF } from "../../../utils/ExportPdf";
 import ExecParamsModal from "./ExecParamsModal";
+import ProposedWellMap from "../../alphawell/ProposedWellMap";
 
 export default function ExecutiveSummary() {
   const {
@@ -2345,7 +2346,6 @@ export default function ExecutiveSummary() {
     // const rowsToExport = summaryRows.slice(start, end);
     const rowsToExport = summaryRows;
 
-
     const escapeVal = (v) => {
       if (v === null || v === undefined) return "";
       const s = String(v);
@@ -2464,13 +2464,21 @@ export default function ExecutiveSummary() {
       RENDER
   ========================================================================*/
   return (
-    <div className="space-y-6" id="exec-summary">
+    <div className="space-y-6 " id="exec-summary">
       {/* =====================================================================
             PROPOSED WELL PANEL
       ===================================================================== */}
       <div className="bg-white rounded-xl shadow-lg p-6">
+        <div className="mt-5">
+          <ProposedWellMap
+            latitude={Number(wellParams.latitude)}
+            longitude={Number(wellParams.longitude)}
+            wellId={wellParams.wellId}
+          />
+        </div>
+
         <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 mt-10">
             <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-sky-50">
               <MapPin className="w-4 h-4 text-sky-600" />
             </span>
@@ -2503,6 +2511,7 @@ export default function ExecutiveSummary() {
                 : "—"
             }
           />
+          <EconPill label="Well ID (API)" value={wellParams.wellId || "—"} />
 
           <EconPill
             label="Radius"

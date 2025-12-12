@@ -1,4 +1,3 @@
-
 // import React from "react";
 // import { Activity, MapPin, DollarSign, Zap } from "lucide-react";
 // import { useAlphaWell } from "../../context/AlphaWellContext";
@@ -651,12 +650,11 @@
 //   );
 // }
 
-
-
-import React from "react";
+import React, { useState } from "react";
 import { Activity, MapPin, DollarSign, Zap } from "lucide-react";
 import { useAlphaWell } from "../../context/AlphaWellContext";
 import logo from "../../assets/logo.jpg";
+import WellLocationPicker from "./WellLocationPicker";
 export default function InputConfig() {
   const {
     setActiveTab,
@@ -670,6 +668,7 @@ export default function InputConfig() {
     analyze,
     isAnalyzing,
   } = useAlphaWell();
+  const [openPicker, setOpenPicker] = useState(false);
 
   const baseInputClasses =
     "w-full px-3 py-2 rounded-lg border text-sm " +
@@ -816,7 +815,77 @@ export default function InputConfig() {
                 </div>
 
                 {/* Lat / Long */}
+                {/* Lat / Long */}
                 <div className="grid grid-cols-2 gap-4">
+                  {/* ✅ Full-width "Choose from map" row */}
+                  <div className="col-span-2">
+                    <div
+                      className="
+        flex items-center justify-between gap-3
+        rounded-xl border border-emerald-400/30
+        bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-emerald-500/5
+        px-4 py-3
+        shadow-[0_10px_30px_rgba(16,185,129,0.10)]
+      "
+                    >
+                      <div className="flex items-start gap-3">
+                        <span
+                          className="mt-0.5 inline-flex h-9 w-9 items-center justify-center rounded-xl
+          bg-emerald-500/15 border border-emerald-400/30"
+                        >
+                          <MapPin className="w-4 h-4 text-emerald-300" />
+                        </span>
+
+                        <div>
+                          <div className="text-sm font-semibold text-slate-100 leading-tight">
+                            Choose from map
+                            <span className="ml-2 text-[11px] font-medium text-emerald-200/80">
+                              (optional)
+                            </span>
+                          </div>
+
+                          <div className="text-[11px] text-slate-300/80 mt-0.5">
+                            Open map → pin location → latitude/longitude will
+                            auto-fill.
+                          </div>
+
+                          {/* ✅ tiny preview if coords exist */}
+                          {Number.isFinite(Number(wellParams.latitude)) &&
+                            Number.isFinite(Number(wellParams.longitude)) && (
+                              <div className="mt-1 text-[11px] text-emerald-200/90">
+                                Current:{" "}
+                                <span className="font-semibold text-emerald-100">
+                                  {Number(wellParams.latitude).toFixed(5)}
+                                </span>
+                                ,{" "}
+                                <span className="font-semibold text-emerald-100">
+                                  {Number(wellParams.longitude).toFixed(5)}
+                                </span>
+                              </div>
+                            )}
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => setOpenPicker(true)}
+                        className="
+          inline-flex items-center gap-2
+          px-4 py-2 rounded-xl text-xs font-bold
+          bg-emerald-500/20 border border-emerald-300/40 text-emerald-100
+          hover:bg-emerald-500/28 hover:border-emerald-200/60
+          transition-all
+          shadow-[0_12px_28px_rgba(16,185,129,0.15)]
+          whitespace-nowrap
+        "
+                      >
+                        <MapPin className="w-4 h-4 text-emerald-200" />
+                        Select on Map
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* ✅ Latitude */}
                   <div>
                     <label className="block text-xs font-medium text-slate-300 mb-1">
                       Latitude
@@ -834,6 +903,8 @@ export default function InputConfig() {
                       className={baseInputClasses}
                     />
                   </div>
+
+                  {/* ✅ Longitude */}
                   <div>
                     <label className="block text-xs font-medium text-slate-300 mb-1">
                       Longitude
@@ -851,6 +922,24 @@ export default function InputConfig() {
                       className={baseInputClasses}
                     />
                   </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-slate-300 mb-1">
+                    Well ID(API)
+                  </label>
+                  <input
+                    type="text"
+                    value={wellParams.wellId || ""}
+                    onChange={(e) =>
+                      setWellParams({
+                        ...wellParams,
+                        wellId: e.target.value,
+                      })
+                    }
+                    className={baseInputClasses}
+                    placeholder="e.g., 42-003-12345"
+                  />
                 </div>
 
                 {/* Radius (Miles) */}
@@ -897,10 +986,12 @@ export default function InputConfig() {
                       className={baseInputClasses}
                     >
                       {/* Default & only selectable option */}
-                      <option value="HORIZONTAL" className="bg-white">Horizontal</option>
+                      <option value="HORIZONTAL" className="bg-white">
+                        Horizontal
+                      </option>
 
                       {/* Visible but NOT selectable */}
-                      <option value="VERTICAL" className="bg-white" disabled >
+                      <option value="VERTICAL" className="bg-white" disabled>
                         Vertical
                       </option>
                     </select>
@@ -1402,6 +1493,20 @@ export default function InputConfig() {
           </button>
         </div>
       </div>
+      <WellLocationPicker
+        open={openPicker}
+        onClose={() => setOpenPicker(false)}
+        latitude={wellParams.latitude}
+        longitude={wellParams.longitude}
+        wellId={wellParams.wellId}
+        onChangeLatLng={(lat, lng) =>
+          setWellParams({
+            ...wellParams,
+            latitude: Number(lat),
+            longitude: Number(lng),
+          })
+        }
+      />
     </div>
   );
 }

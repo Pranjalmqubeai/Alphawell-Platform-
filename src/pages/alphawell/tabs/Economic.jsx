@@ -1843,7 +1843,7 @@ export default function Economic() {
   const baselineNpvM = Number(npvToM(npvRaw));
 
   return (
-    <div  id="economic-summary" className="space-y-6">
+    <div id="economic-summary" className="space-y-6">
       {/* ==========================================================
           PROPOSED WELL LOCATION (same as Production order)
       =========================================================== */}
@@ -1877,6 +1877,10 @@ export default function Economic() {
                 ? wellParams.longitude.toFixed(4)
                 : "—"
             }
+          />
+          <LocationTile
+            label="Well ID (API)"
+            value={wellParams?.wellId || "—"}
           />
           <LocationTile
             label="Radius"

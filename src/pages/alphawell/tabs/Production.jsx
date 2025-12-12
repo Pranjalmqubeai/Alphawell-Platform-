@@ -1545,6 +1545,10 @@ export default function Production() {
             }
           />
           <LocationTile
+            label="Well ID (API)"
+            value={wellParams.wellId || "—"}
+          />
+          <LocationTile
             label="Radius"
             value={`${Number(
               wellParams.radiusMiles != null ? wellParams.radiusMiles : 15
